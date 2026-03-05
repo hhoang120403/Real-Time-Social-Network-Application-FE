@@ -8,12 +8,13 @@ interface IInputProps {
   value?: any;
   className?: string;
   labelText?: string;
+  style?: React.CSSProperties;
   placeholder?: string;
   handleChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
 }
 
 const Input = (props: IInputProps) => {
-  const { id, name, type, value, className, labelText, placeholder, handleChange } = props;
+  const { id, name, type, value, className, labelText, style, placeholder, handleChange } = props;
 
   return (
     <>
@@ -32,6 +33,7 @@ const Input = (props: IInputProps) => {
           onChange={handleChange}
           placeholder={placeholder}
           className={`form-input ${className}`}
+          style={style}
           autoComplete="off"
         />
       </div>
