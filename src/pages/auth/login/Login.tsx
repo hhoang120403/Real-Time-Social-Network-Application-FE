@@ -5,6 +5,10 @@ import Button from '@components/button/Button';
 import { Link, useNavigate } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { authService } from '@services/api/auth/auth.service';
+import useLocalStorage from '@hooks/useLocalStorage';
+import { Utils } from '@services/utils/utils.service';
+import useSessionStorage from '@hooks/useSessionStorage';
+import { useDispatch } from 'react-redux';
 
 const Login = () => {
   const [username, setUsername] = useState('');
@@ -15,7 +19,11 @@ const Login = () => {
   const [alertType, setAlertType] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
   const [user, setUser] = useState('');
+  const [setStoredUsername] = useLocalStorage('username', 'set');
+  const [setLoggedIn] = useLocalStorage('keepLoggedIn', 'set');
+  const [pageReload] = useSessionStorage('pageReload', 'set');
   const navigate = useNavigate();
+  const dispatch = useDispatch();
 
   const loginUser = async (event: React.SubmitEvent<HTMLFormElement>) => {
     setLoading(true);
@@ -24,16 +32,11 @@ const Login = () => {
     try {
       const result = await authService.signIn({ username, password });
 
-      console.log(result);
-
-      // 1 - set logged in to true in local
-      // 2 - set username in local storage
-      // 3 - dispatch user to redux
-
-      setUser(result.data.user);
-      setKeepLoggedIn(keepLoggedIn);
+      setStoredUsername(username);
+      setLoggedIn(keepLoggedIn);
       setHasError(false);
       setAlertType('alert-success');
+      Utils.dispatchUser(result, pageReload, dispatch, setUser);
     } catch (error: any) {
       setLoading(false);
       setHasError(true);
