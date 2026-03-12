@@ -1,4 +1,4 @@
-import { avatarColors } from './static.data';
+import { avatarColors } from '@services/utils/static.data';
 import { floor, random } from 'lodash';
 
 export class Utils {

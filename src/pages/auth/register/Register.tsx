@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
-import './Register.scss';
-import Input from '../../../components/input/Input';
-import Button from '../../../components/button/Button';
-import { Utils } from '../../../services/utils/utils.service';
-import { authService } from '../../../services/api/auth/auth.service';
+import '@pages/auth/register/Register.scss';
+import Input from '@components/input/Input';
+import Button from '@components/button/Button';
+import { Utils } from '@services/utils/utils.service';
+import { authService } from '@services/api/auth/auth.service';
+import { useNavigate } from 'react-router-dom';
 
 const Register = () => {
   const [username, setUsername] = useState('');
@@ -14,6 +15,7 @@ const Register = () => {
   const [alertType, setAlertType] = useState('');
   const [hasError, setHasError] = useState(false);
   const [user, setUser] = useState(null);
+  const navigate = useNavigate();
 
   const registerUser = async (event: React.SubmitEvent<HTMLFormElement>) => {
     setLoading(true);
@@ -22,8 +24,6 @@ const Register = () => {
       const avatarColor = Utils.avatarColor();
       const avatarImage = Utils.generateAvatarImage(username, avatarColor);
       const result = await authService.signUp({ username, email, password, avatarColor, avatarImage });
-
-      console.log(result);
 
       // 1 - set logged in to true in local
       // 2 - set username in local storage
@@ -43,10 +43,9 @@ const Register = () => {
   useEffect(() => {
     if (loading && !user) return;
     if (user) {
-      console.log('Navigate to streams page');
-      setLoading(false);
+      navigate('/app/social/streams');
     }
-  }, [loading, user]);
+  }, [loading, user, navigate]);
 
   return (
     <div className="auth-inner">
