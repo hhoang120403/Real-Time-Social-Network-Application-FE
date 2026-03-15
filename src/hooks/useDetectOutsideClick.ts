@@ -1,11 +1,16 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type RefObject, type Dispatch, type SetStateAction } from 'react';
 
-const useDetectOutsideClick = (ref: any, initialState: boolean) => {
+const useDetectOutsideClick = (
+  ref: RefObject<HTMLElement | null>,
+  initialState: boolean
+): [boolean, Dispatch<SetStateAction<boolean>>] => {
   const [isActive, setIsActive] = useState(initialState);
 
   useEffect(() => {
-    const handleClickOutside = (event: any) => {
-      if (ref.current && !ref.current.contains(event.target)) {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Node;
+
+      if (ref.current && !ref.current.contains(target)) {
         setIsActive(!isActive);
       }
     };

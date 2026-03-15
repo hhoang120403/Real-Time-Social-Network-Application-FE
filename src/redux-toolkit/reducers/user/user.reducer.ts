@@ -1,8 +1,9 @@
 import { createSlice } from '@reduxjs/toolkit';
+import type { IUser } from '@root/types/user';
 
 const initialState = {
   token: '',
-  profile: null
+  profile: null as IUser | null
 };
 
 const userSlice = createSlice({

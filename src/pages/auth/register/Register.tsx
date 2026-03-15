@@ -8,6 +8,7 @@ import { useNavigate } from 'react-router-dom';
 import useLocalStorage from '@hooks/useLocalStorage';
 import { useDispatch } from 'react-redux';
 import useSessionStorage from '@hooks/useSessionStorage';
+import type { AppDispatch } from '@redux/store';
 
 const Register = () => {
   const [username, setUsername] = useState('');
@@ -22,7 +23,7 @@ const Register = () => {
   const [setLoggedIn] = useLocalStorage('keepLoggedIn', 'set');
   const [pageReload] = useSessionStorage('pageReload', 'set');
   const navigate = useNavigate();
-  const dispatch = useDispatch();
+  const dispatch = useDispatch<AppDispatch>();
 
   const registerUser = async (event: React.SubmitEvent<HTMLFormElement>) => {
     setLoading(true);
