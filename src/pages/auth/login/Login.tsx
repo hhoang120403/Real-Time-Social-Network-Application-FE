@@ -9,6 +9,7 @@ import useLocalStorage from '@hooks/useLocalStorage';
 import { Utils } from '@services/utils/utils.service';
 import useSessionStorage from '@hooks/useSessionStorage';
 import { useDispatch } from 'react-redux';
+import type { AppDispatch } from '@redux/store';
 
 const Login = () => {
   const [username, setUsername] = useState('');
@@ -23,7 +24,7 @@ const Login = () => {
   const [setLoggedIn] = useLocalStorage('keepLoggedIn', 'set');
   const [pageReload] = useSessionStorage('pageReload', 'set');
   const navigate = useNavigate();
-  const dispatch = useDispatch();
+  const dispatch = useDispatch<AppDispatch>();
 
   const loginUser = async (event: React.SubmitEvent<HTMLFormElement>) => {
     setLoading(true);

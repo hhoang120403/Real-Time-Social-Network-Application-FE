@@ -25,6 +25,15 @@ import {
   FaUsers
 } from 'react-icons/fa';
 
+type IconName = keyof typeof fontAwesomeIcons;
+
+export type SidebarItem = {
+  index: number;
+  name: string;
+  url: string;
+  iconName: IconName;
+};
+
 export const sideBarItems = [
   {
     index: 1,
@@ -74,7 +83,7 @@ export const sideBarItems = [
     url: '/app/social/profile',
     iconName: 'FaRegUser'
   }
-];
+] satisfies SidebarItem[];
 
 export const feelingsList = [
   {
