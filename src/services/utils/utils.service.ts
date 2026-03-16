@@ -1,3 +1,7 @@
+import type { LoginResponse } from '@app-types/api';
+import type { NotificationType } from '@app-types/toast';
+import type { IUser } from '@app-types/user';
+import { addNotification, clearNotification } from '@redux/reducers/notifications/notification.reducer';
 import { addUser, clearUser } from '@redux/reducers/user/user.reducer';
 import type { AppDispatch } from '@redux/store';
 import type { ISettingsDropdownItem } from '@root/types/settings';
@@ -38,18 +42,31 @@ export class Utils {
     return canvas.toDataURL('image/png');
   }
 
-  static dispatchUser(result, pageReload, dispatch, setUser) {
+  static dispatchUser(
+    result: LoginResponse,
+    pageReload: (value: boolean) => void,
+    dispatch: AppDispatch,
+    setUser: (value: IUser) => void
+  ) {
     pageReload(true);
-    console.log('result', result.data.user);
-    dispatch(addUser({ token: result.data.token, profile: result.data.user }));
-    setUser(result.data.user);
+    dispatch(addUser({ token: result.token, profile: result.user }));
+    setUser(result.user);
   }
 
   static clearStore({ dispatch, deleteStorageUsername, deleteSessionPageReload, setLoggedIn }: ClearStoreParams) {
     dispatch(clearUser());
+    dispatch(clearNotification());
     deleteStorageUsername();
     deleteSessionPageReload();
     setLoggedIn(false);
+  }
+
+  static dispatchNotification(message: string, type: NotificationType, dispatch: AppDispatch) {
+    dispatch(addNotification({ message, type }));
+  }
+
+  static dispatchClearNotification(dispatch: AppDispatch) {
+    dispatch(clearNotification());
   }
 
   static appEnvironment() {
@@ -80,7 +97,7 @@ export class Utils {
       version = version.replace(/['"]+/g, '');
       id = id.replace(/['"]+/g, '');
     }
-    return `https://res.cloudinary.com/dyamr9ym3/image/upload/v${version}/${id}`;
+    return `https://res.cloudinary.com/${import.meta.env.VITE_CLOUD_NAME}/image/upload/v${version}/${id}`;
   }
 
   static generateString(length: number) {
