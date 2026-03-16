@@ -12,6 +12,7 @@
       "@assets/*": ["src/assets/*"],
       "@colors/*": ["src/colors/*"],
       "@redux/*": ["src/redux-toolkit/*"],
+      "@app-types/*": ["src/types/*"],
       "@root/*": ["src/*"]
     }
   }

@@ -13,6 +13,7 @@ export default defineConfig({
       '@pages': path.resolve(__dirname, 'src/pages'),
       '@mocks': path.resolve(__dirname, 'src/mocks'),
       '@assets': path.resolve(__dirname, 'src/assets'),
+      '@app-types': path.resolve(__dirname, 'src/types'),
       '@colors': path.resolve(__dirname, 'src/colors'),
       '@redux': path.resolve(__dirname, 'src/redux-toolkit'),
       '@root': path.resolve(__dirname, 'src')

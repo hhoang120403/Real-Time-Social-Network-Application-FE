@@ -11,7 +11,7 @@ const useDetectOutsideClick = (
       const target = event.target as Node;
 
       if (ref.current && !ref.current.contains(target)) {
-        setIsActive(!isActive);
+        setIsActive(false);
       }
     };
 

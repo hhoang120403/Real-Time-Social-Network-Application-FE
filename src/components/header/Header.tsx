@@ -20,11 +20,27 @@ import useSessionStorage from '@hooks/useSessionStorage';
 import { useDispatch } from 'react-redux';
 import { userService } from '@services/api/user/user.service';
 import HeaderSkeleton from './HeaderSkeleton';
+import { notificationService } from '@services/api/notifications/notification.service';
+import { NotificationUtils } from '@services/utils/notification-utils.service';
+import type { NotificationDialogState } from '@pages/social/notifications/Notifications';
+import NotificationPreview from '@components/dialog/NotificationPreview';
+import { socketService } from '@services/socket/socket.service';
 
 const Header = () => {
   const { profile } = useSelector((state: RootState) => state.user);
   const [environment, setEnvironment] = useState('');
   const [settings, setSettings] = useState<ISettingsDropdownItem[]>([]);
+  const [notifications, setNotifications] = useState<any[]>([]);
+  const [notificationCount, setNotificationCount] = useState<number>(0);
+  const [notificationDialog, setNotificationDialog] = useState<NotificationDialogState>({
+    post: '',
+    imgUrl: '',
+    comment: '',
+    reaction: undefined,
+    senderName: '',
+    secondButtonText: '',
+    secondBtnHandler: () => {}
+  });
   const messageRef = useRef<HTMLDivElement>(null);
   const notificationRef = useRef<HTMLUListElement>(null);
   const settingsRef = useRef<HTMLUListElement>(null);
@@ -33,37 +49,70 @@ const Header = () => {
   const [isMessageActive, setIsMessageActive] = useDetectOutsideClick(messageRef, false);
   const [isNotificationActive, setIsNotificationActive] = useDetectOutsideClick(notificationRef, false);
   const [isSettingsActive, setIsSettingsActive] = useDetectOutsideClick(settingsRef, false);
+  const storedUsername = useLocalStorage('username', 'get');
   const [deleteStorageUsername] = useLocalStorage('username', 'delete');
   const [setLoggedIn] = useLocalStorage('keepLoggedIn', 'set');
   const [deleteSessionPageReload] = useSessionStorage('pageReload', 'delete');
 
   const backgroundColor = environment === 'DEV' ? '#50b5ff' : environment === 'STG' ? '#e9710f' : '';
 
+  const getUserNotifications = async () => {
+    try {
+      const response = await notificationService.getUserNotifications();
+      const mappedNotifications = NotificationUtils.mapNotificationDropdownItems(
+        response.data.notifications,
+        setNotificationCount
+      );
+      setNotifications(mappedNotifications);
+      socketService?.socket.emit('setup', { userId: storedUsername });
+    } catch (error: any) {
+      Utils.dispatchNotification(error?.response?.data?.message, 'error', dispatch);
+    }
+  };
+
+  const onMarkAsRead = async (notification: any) => {
+    try {
+      await NotificationUtils.markAsRead(notification?._id as string, notification, setNotificationDialog);
+    } catch (error: any) {
+      Utils.dispatchNotification(error?.response?.data?.message, 'error', dispatch);
+    }
+  };
+
+  const onDeleteNotification = async (notificationId: string) => {
+    try {
+      const response = await notificationService.deleteNotification(notificationId);
+      Utils.dispatchNotification(response?.data?.message, 'success', dispatch);
+    } catch (error: any) {
+      Utils.dispatchNotification(error?.response?.data?.message, 'error', dispatch);
+    }
+  };
+
   const openChatPage = () => {};
-
-  const onMarkAsRead = () => {};
-
-  const onDeleteNotification = () => {};
 
   const onLogout = async () => {
     try {
       Utils.clearStore({ dispatch, deleteStorageUsername, deleteSessionPageReload, setLoggedIn });
       await userService.logoutUser();
       navigate('/');
-    } catch (error) {
-      console.log(error);
+    } catch (error: any) {
+      Utils.dispatchNotification(error.response.data.message, 'error', dispatch);
     }
   };
 
   useEffectOnce(() => {
     const items = Utils.mapSettingsDropdownItems();
     setSettings(items);
+    getUserNotifications();
   });
 
   useEffect(() => {
     const env = Utils.appEnvironment();
     setEnvironment(env);
   }, []);
+
+  useEffect(() => {
+    NotificationUtils.socketIONotification(profile!, notifications, setNotifications, 'header', setNotificationCount);
+  }, [profile, notifications, setNotifications]);
 
   return (
     <>
@@ -80,6 +129,26 @@ const Header = () => {
                 openChatPage={openChatPage}
               />
             </div>
+          )}
+          {notificationDialog?.senderName && (
+            <NotificationPreview
+              title="Your post"
+              post={notificationDialog?.post}
+              imgUrl={notificationDialog?.imgUrl}
+              comment={notificationDialog?.comment}
+              reaction={notificationDialog?.reaction}
+              senderName={notificationDialog?.senderName}
+              secondButtonText="Close"
+              secondBtnHandler={() => {
+                setNotificationDialog({
+                  post: '',
+                  imgUrl: '',
+                  comment: '',
+                  reaction: undefined,
+                  senderName: ''
+                });
+              }}
+            />
           )}
           <div className="header-navbar">
             <div className="header-image" data-testid="header-image" onClick={() => navigate('/app/social/streams')}>
@@ -101,7 +170,9 @@ const Header = () => {
             <ul className="header-nav">
               <li
                 className="header-nav-item active-item"
-                onClick={() => {
+                onMouseDown={(event) => event.stopPropagation()}
+                onClick={(event) => {
+                  event.stopPropagation();
                   setIsNotificationActive(!isNotificationActive);
                   setIsMessageActive(false);
                   setIsSettingsActive(false);
@@ -109,9 +180,7 @@ const Header = () => {
               >
                 <span className="header-list-name">
                   <FaRegBell className="header-list-icon" />
-                  <span className="bg-danger-dots dots" data-testid="notification-dots">
-                    5
-                  </span>
+                  {notificationCount > 0 && <span className="bg-danger-dots dots">{notificationCount}</span>}
                 </span>
                 {isNotificationActive && (
                   <ul className="dropdown-ul" ref={notificationRef}>
@@ -120,8 +189,8 @@ const Header = () => {
                         title="Notifications"
                         height={300}
                         style={{ right: '250px', top: '20px' }}
-                        data={[]}
-                        notificationCount={0}
+                        data={notifications}
+                        notificationCount={notificationCount}
                         onMarkAsRead={onMarkAsRead}
                         onDeleteNotification={onDeleteNotification}
                         onNavigate={() => {}}
@@ -134,7 +203,9 @@ const Header = () => {
               </li>
               <li
                 className="header-nav-item active-item"
-                onClick={() => {
+                onMouseDown={(event) => event.stopPropagation()}
+                onClick={(event) => {
+                  event.stopPropagation();
                   setIsMessageActive(!isMessageActive);
                   setIsNotificationActive(false);
                   setIsSettingsActive(false);
@@ -148,7 +219,9 @@ const Header = () => {
               </li>
               <li
                 className="header-nav-item"
-                onClick={() => {
+                onMouseDown={(event) => event.stopPropagation()}
+                onClick={(event) => {
+                  event.stopPropagation();
                   setIsMessageActive(false);
                   setIsNotificationActive(false);
                   setIsSettingsActive(!isSettingsActive);
