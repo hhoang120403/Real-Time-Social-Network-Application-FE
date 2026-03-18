@@ -6,7 +6,7 @@ import { addUser, clearUser } from '@redux/reducers/user/user.reducer';
 import type { AppDispatch } from '@redux/store';
 import type { ISettingsDropdownItem } from '@root/types/settings';
 import { avatarColors } from '@services/utils/static.data';
-import { floor, random } from 'lodash';
+import { floor, random, some } from 'lodash';
 
 interface ClearStoreParams {
   dispatch: AppDispatch;
@@ -108,5 +108,22 @@ export class Utils {
       result += characters.charAt(Math.floor(Math.random() * charactersLength));
     }
     return result;
+  }
+
+  static checkIfUserIsBlocked(blocked: string[], userId: string) {
+    return some(blocked, (id) => id === userId);
+  }
+
+  static checkIfUserIsFollowed(userFollowers: any[], postCreatorId: string, userId: string) {
+    return some(userFollowers, (user) => user._id === postCreatorId || postCreatorId === userId);
+  }
+
+  static checkIfUserIsOnline(username: string, onlineUsers: string[]) {
+    return some(onlineUsers, (user) => user === username?.toLowerCase());
+  }
+
+  static firstLetterUpperCase(word: string) {
+    if (!word) return '';
+    return `${word.charAt(0).toUpperCase()}${word.slice(1)}`;
   }
 }

@@ -1,5 +1,5 @@
 interface IButtonProps {
-  label: string;
+  label: string | React.ReactNode;
   className?: string;
   disabled?: boolean;
   handleClick?: () => void;

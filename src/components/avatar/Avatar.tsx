@@ -12,7 +12,7 @@ interface AvatarProps {
 const Avatar = ({ avatarSrc, name, bgColor = '#f33e58', textColor, size, round = true }: AvatarProps) => {
   const textSizeRatio = 1.7;
   const fontSize = Math.floor(size / textSizeRatio);
-  const firstNameCharacter = name.charAt(0);
+  const firstNameCharacter = name?.charAt(0);
 
   return (
     <>

@@ -31,7 +31,7 @@ const Register = () => {
     try {
       const avatarColor = Utils.avatarColor();
       const avatarImage = Utils.generateAvatarImage(username, avatarColor);
-      const result = await authService.signUp({ username, email, password, avatarColor, avatarImage });
+      const result: any = await authService.signUp({ username, email, password, avatarColor, avatarImage });
 
       setLoggedIn(true);
       setStoredUsername(username);
@@ -70,7 +70,7 @@ const Register = () => {
             labelText="Username"
             placeholder="Enter your username"
             style={{ border: `${hasError ? '1px solid #fa9b8a' : ''}` }}
-            handleChange={(e) => setUsername(e.target.value)}
+            onChange={(e) => setUsername(e.target.value)}
           />
 
           {/* email field */}
@@ -82,7 +82,7 @@ const Register = () => {
             labelText="Email"
             placeholder="Enter your email"
             style={{ border: `${hasError ? '1px solid #fa9b8a' : ''}` }}
-            handleChange={(e) => setEmail(e.target.value)}
+            onChange={(e) => setEmail(e.target.value)}
           />
 
           {/* password field */}
@@ -94,7 +94,7 @@ const Register = () => {
             labelText="Password"
             placeholder="Enter your password"
             style={{ border: `${hasError ? '1px solid #fa9b8a' : ''}` }}
-            handleChange={(e) => setPassword(e.target.value)}
+            onChange={(e) => setPassword(e.target.value)}
           />
         </div>
 

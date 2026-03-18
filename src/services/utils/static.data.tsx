@@ -37,7 +37,7 @@ export type SidebarItem = {
 export const sideBarItems = [
   {
     index: 1,
-    name: 'Streams',
+    name: 'Feeds',
     url: '/app/social/streams',
     iconName: 'FaNewspaper'
   },

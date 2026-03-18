@@ -72,7 +72,7 @@ const Login = () => {
             labelText="Username"
             placeholder="Enter your username"
             style={{ border: `${hasError ? '1px solid #fa9b8a' : ''}` }}
-            handleChange={(e) => setUsername(e.target.value)}
+            onChange={(e) => setUsername(e.target.value)}
           />
 
           {/* password field */}
@@ -84,7 +84,7 @@ const Login = () => {
             labelText="Password"
             placeholder="Enter your password"
             style={{ border: `${hasError ? '1px solid ##fa9b8a' : ''}` }}
-            handleChange={(e) => setPassword(e.target.value)}
+            onChange={(e) => setPassword(e.target.value)}
           />
 
           <label className="checkmark-container" htmlFor="checkbox">
@@ -92,8 +92,8 @@ const Login = () => {
               id="checkbox"
               type="checkbox"
               name="checkbox"
-              value={keepLoggedIn}
-              handleChange={() => setKeepLoggedIn(!keepLoggedIn)}
+              checked={keepLoggedIn}
+              onChange={() => setKeepLoggedIn(!keepLoggedIn)}
             />
             Keep me signed in
           </label>
