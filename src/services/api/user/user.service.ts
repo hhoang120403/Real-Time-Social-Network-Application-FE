@@ -15,6 +15,11 @@ class UserService {
     const response = await axiosInstance.get('/currentuser');
     return response;
   }
+
+  async getAllUsers(page: number) {
+    const response = await axiosInstance.get(`/user/all/${page}`);
+    return response;
+  }
 }
 
 export const userService = new UserService();

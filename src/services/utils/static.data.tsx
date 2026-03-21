@@ -1,9 +1,9 @@
 import blessed from '@root/assets/feelings/blessed.jpg';
 import excited from '@root/assets/feelings/excited.jpg';
-import happy from '@root/assets/feelings/happy.jpg';
+import happyFeeling from '@root/assets/feelings/happy.jpg';
 import loved from '@root/assets/feelings/loved.jpg';
 import angry from '@root/assets/reactions/angry.png';
-import happyReaction from '@root/assets/reactions/happy.png';
+import happy from '@root/assets/reactions/happy.png';
 import like from '@root/assets/reactions/like.png';
 import love from '@root/assets/reactions/love.png';
 import sad from '@root/assets/reactions/sad.png';
@@ -89,7 +89,7 @@ export const feelingsList = [
   {
     index: 0,
     name: 'happy',
-    image: happy
+    image: happyFeeling
   },
   {
     index: 1,
@@ -195,7 +195,14 @@ export const emptyPostData = {
   email: '',
   avatarColor: '',
   commentsCount: '',
-  reactions: [],
+  reactions: {
+    like: 0,
+    love: 0,
+    wow: 0,
+    sad: 0,
+    happy: 0,
+    angry: 0
+  },
   imgVersion: '',
   imgId: '',
   createdAt: ''
@@ -206,7 +213,7 @@ export const reactionsMap = {
   love,
   wow,
   sad,
-  happyReaction,
+  happy,
   angry
 };
 

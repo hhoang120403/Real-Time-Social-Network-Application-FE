@@ -13,7 +13,7 @@ export class PostUtils {
     bgColor: string,
     postData: PostData,
     setTextAreaBackground: (value: string) => void,
-    setPostData: (value: PostData) => void
+    setPostData: (value: any) => void
   ) {
     postData.bgColor = bgColor;
     setTextAreaBackground(bgColor);
@@ -103,6 +103,7 @@ export class PostUtils {
       if (response) {
         setApiResponse('success');
         setLoading(false);
+        return response;
       }
     } catch (error: any) {
       PostUtils.dispatchNotification(error.response.data.message, 'error', setApiResponse, setLoading, dispatch);
@@ -131,6 +132,55 @@ export class PostUtils {
       }
     } catch (error: any) {
       PostUtils.dispatchNotification(error.response.data.message, 'error', setApiResponse, setLoading, dispatch);
+    }
+  }
+
+  static async sendUpdatePostWithImageRequest(
+    fileResult: string,
+    postId: string,
+    postData: PostData,
+    setApiResponse: (value: string) => void,
+    setLoading: (value: boolean) => void,
+    dispatch: Dispatch
+  ) {
+    try {
+      postData.image = fileResult;
+      postData.gifUrl = '';
+      postData.imgId = '';
+      postData.imgVersion = '';
+      const response = await postService.updatePostWithImage(postId, postData);
+      if (response) {
+        PostUtils.dispatchNotification(response?.data?.message, 'success', setApiResponse, setLoading, dispatch);
+        setTimeout(() => {
+          setApiResponse('');
+          setLoading(false);
+        }, 3000);
+        PostUtils.closePostModal(dispatch);
+      }
+    } catch (error: any) {
+      PostUtils.dispatchNotification(error.response?.data?.message, 'error', setApiResponse, setLoading, dispatch);
+    }
+  }
+
+  static async sendUpdatePostRequest(
+    postId: string,
+    postData: PostData,
+    setApiResponse: (value: string) => void,
+    setLoading: (value: boolean) => void,
+    dispatch: Dispatch
+  ) {
+    try {
+      const response = await postService.updatePost(postId, postData);
+      if (response) {
+        PostUtils.dispatchNotification(response?.data?.message, 'success', setApiResponse, setLoading, dispatch);
+        setTimeout(() => {
+          setApiResponse('success');
+          setLoading(false);
+        }, 3000);
+        PostUtils.closePostModal(dispatch);
+      }
+    } catch (error: any) {
+      PostUtils.dispatchNotification(error.response?.data?.message, 'error', setApiResponse, setLoading, dispatch);
     }
   }
 

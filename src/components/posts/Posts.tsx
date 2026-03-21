@@ -6,6 +6,7 @@ import './Posts.scss';
 import type { PostItem } from '@app-types/post';
 import Post from './post/Post';
 import { PostUtils } from '@services/utils/post-utils.service';
+import PostSkeleton from './post/PostSkeleton';
 
 interface PostsProps {
   allPosts: PostItem[];
@@ -27,21 +28,22 @@ const Posts = ({ allPosts, userFollowing, postsLoading }: PostsProps) => {
 
   return (
     <div className="posts-container">
-      {posts.map((post) => (
-        <div key={Utils.generateString(10)}>
-          {(!Utils.checkIfUserIsBlocked(profile?.blockedBy || [], post?.userId) || post?.userId === profile?._id) && (
-            <>{PostUtils.checkPrivacy(post, profile, following) && <Post post={post} showIcons={false} />}</>
-          )}
-        </div>
-      ))}
+      {posts.length > 0 &&
+        posts.map((post) => (
+          <div key={post?._id}>
+            {(!Utils.checkIfUserIsBlocked(profile?.blockedBy || [], post?.userId) || post?.userId === profile?._id) && (
+              <>{PostUtils.checkPrivacy(post, profile, following) && <Post post={post} showIcons={true} />}</>
+            )}
+          </div>
+        ))}
 
-      {/* {loading &&
+      {loading &&
         !posts.length &&
         [1, 2, 3, 4, 5, 6].map((index) => (
           <div key={index}>
             <PostSkeleton />
           </div>
-        ))} */}
+        ))}
     </div>
   );
 };

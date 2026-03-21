@@ -15,6 +15,8 @@ import type { RootState } from '@redux/store';
 import { uniqBy } from 'lodash';
 import useInfiniteScroll from '@hooks/useInfiniteScroll';
 import { PostUtils } from '@services/utils/post-utils.service';
+import useLocalStorage from '@hooks/useLocalStorage';
+import { addReactions } from '@redux/reducers/post/user-post-reaction.reducer';
 
 const Streams = () => {
   const { allPosts } = useSelector((state: RootState) => state);
@@ -26,6 +28,8 @@ const Streams = () => {
   const bottomLineRef = useRef<HTMLDivElement>(null);
   const appPosts = useRef<any[]>([]);
   const dispatch = useDispatch<AppDispatch>();
+  const storedUsername = useLocalStorage('username', 'get');
+  const [deleteSelectedPostId] = useLocalStorage('selectedPostId', 'delete');
 
   useInfiniteScroll(bodyRef, bottomLineRef, fetchPostData);
   const PAGE_SIZE = 10;
@@ -35,14 +39,14 @@ const Streams = () => {
     if (currentPage <= Math.round(totalPostsCount / PAGE_SIZE)) {
       pageNum += 1;
       setCurrentPage(pageNum);
-      getAllPosts();
+      getAllPosts(pageNum);
     }
   }
 
-  const getAllPosts = async () => {
+  const getAllPosts = async (page = currentPage) => {
     setLoading(true);
     try {
-      const response = await postService.getAllPosts(currentPage);
+      const response = await postService.getAllPosts(page);
       if (response.data.posts.length > 0) {
         appPosts.current = [...posts, ...response.data.posts];
         const allPosts = uniqBy(appPosts.current, '_id');
@@ -55,13 +59,24 @@ const Streams = () => {
     }
   };
 
+  const getReactionsByUsername = async () => {
+    try {
+      const response = await postService.getReactionsByUsername(storedUsername);
+      dispatch(addReactions(response.data.reactions));
+    } catch (error: any) {
+      Utils.dispatchNotification(error.response.data.message, 'error', dispatch);
+    }
+  };
+
   useEffectOnce(() => {
-    dispatch(getUserSuggestions());
-    getAllPosts();
+    // getAllPosts();
+    getReactionsByUsername();
+    deleteSelectedPostId();
   });
 
   useEffect(() => {
     dispatch(getPosts());
+    dispatch(getUserSuggestions());
   }, [dispatch]);
 
   useEffect(() => {
@@ -77,7 +92,7 @@ const Streams = () => {
   return (
     <div className="streams">
       <div className="streams-content">
-        <div className="streams-post" ref={bodyRef} style={{ backgroundColor: 'white' }}>
+        <div className="streams-post" ref={bodyRef}>
           <PostForm />
           <Posts allPosts={posts} userFollowing={[]} postsLoading={loading} />
           <div style={{ marginBottom: '50px', height: '50px' }} ref={bottomLineRef}></div>

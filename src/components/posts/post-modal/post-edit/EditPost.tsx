@@ -1,25 +1,26 @@
 import PostWrapper from '@components/posts/modal-wrappers/post-wrapper/PostWrapper';
-import '@components/posts/post-modal/post-add/AddPost.scss';
+import '@components/posts/post-modal/post-edit/EditPost.scss';
 import { useDispatch, useSelector } from 'react-redux';
 import { type AppDispatch, type RootState } from '@redux/store';
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import ModalBoxContent from '@components/posts/post-modal/modal-box-content/ModalBoxContent';
 import { FaArrowLeft, FaTimes } from 'react-icons/fa';
-import { bgColors } from '@services/utils/static.data';
+import { bgColors, feelingsList } from '@services/utils/static.data';
 import ModalBoxSelection from '@components/posts/post-modal/modal-box-content/ModalBoxSelection';
 import Button from '@components/button/Button';
 import { PostUtils } from '@services/utils/post-utils.service';
 import Giphy from '@components/giphy/Giphy';
-import { toggleGifModal } from '@redux/reducers/modal/modal.reducer';
+import { addPostFeeling, toggleGifModal } from '@redux/reducers/modal/modal.reducer';
 import { ImageUtils } from '@services/utils/image-utils.service';
-import { postService } from '@services/api/post/post.service';
 import type { PostData } from '@app-types/post';
 import Spinner from '@components/spinner/Spinner';
+import { find } from 'lodash';
+import { Utils } from '@services/utils/utils.service';
 
-const AddPost = ({ selectedImage }: { selectedImage: File | null }) => {
+const EditPost = () => {
   const { profile } = useSelector((state: RootState) => state.user);
   const { gifModalIsOpen, feeling } = useSelector((state: RootState) => state.modal);
-  const { gifUrl, image, privacy } = useSelector((state: RootState) => state.post);
+  const { post } = useSelector((state: RootState) => state);
   const [loading, setLoading] = useState(false);
   const [postImage, setPostImage] = useState<string>('');
   const [allowedNumberOfCharacters] = useState('255/255');
@@ -31,7 +32,9 @@ const AddPost = ({ selectedImage }: { selectedImage: File | null }) => {
     feelings: '',
     gifUrl: '',
     profilePicture: '',
-    image: ''
+    image: '',
+    imgId: '',
+    imgVersion: ''
   });
   const [disable, setDisable] = useState(true);
   const [apiResponse, setApiResponse] = useState('');
@@ -70,75 +73,139 @@ const AddPost = ({ selectedImage }: { selectedImage: File | null }) => {
   };
 
   const clearImage = () => {
-    PostUtils.clearImage(postData, '', inputRef, dispatch, setSelectedPostItem, setPostImage, setPostData);
+    PostUtils.clearImage(
+      postData,
+      post?.post || '',
+      inputRef,
+      dispatch,
+      setSelectedPostItem,
+      setPostImage,
+      setPostData
+    );
   };
 
-  const createPost = async () => {
+  const updatePost = async () => {
     setLoading(!loading);
     setDisable(!disable);
     try {
       if (Object.keys(feeling).length) {
         postData.feelings = feeling?.name;
       }
-      postData.privacy = privacy || 'Public';
-      postData.gifUrl = gifUrl;
-      // postData.image = image;
+      if (postData.gifUrl || (postData.imgId && postData.imgVersion)) {
+        postData.bgColor = '#ffffff';
+      }
+      postData.privacy = post?.privacy || 'Public';
       postData.profilePicture = profile?.profilePicture!;
-      if (selectedPostItem || selectedImage) {
-        let result = '';
-        if (selectedPostItem) {
-          result = await ImageUtils.readAsBase64(selectedPostItem);
-        }
 
-        if (selectedImage) {
-          result = await ImageUtils.readAsBase64(selectedImage);
-        }
-
-        const response = await PostUtils.sendPostWithImageRequest(
+      if (selectedPostItem) {
+        const result = await ImageUtils.readAsBase64(selectedPostItem);
+        await PostUtils.sendUpdatePostWithImageRequest(
           result,
+          post?._id,
           postData,
-          imageInputRef,
           setApiResponse,
           setLoading,
           dispatch
         );
-
-        if (response && response?.data?.message) {
-          PostUtils.closePostModal(dispatch);
-        }
       } else {
-        const response = await postService.createPost(postData);
-        if (response) {
-          setApiResponse('success');
-          setLoading(false);
-          PostUtils.closePostModal(dispatch);
-        }
+        await PostUtils.sendUpdatePostRequest(post?._id, postData, setApiResponse, setLoading, dispatch);
       }
     } catch (error: any) {
       PostUtils.dispatchNotification(error.response.data.message, 'error', setApiResponse, setLoading, dispatch);
     }
   };
 
+  const getFeeling = useCallback(
+    (name: string) => {
+      const feeling = find(feelingsList, (data) => data.name === name);
+      dispatch(addPostFeeling({ feeling }));
+    },
+    [dispatch]
+  );
+
+  const postInputData = useCallback(() => {
+    setTimeout(() => {
+      if (imageInputRef?.current) {
+        postData.post = post?.post || '';
+        imageInputRef.current.textContent = post?.post;
+        setPostData(postData);
+        PostUtils.positionCursor('editable');
+      }
+    });
+  }, [post, postData]);
+
+  const editableFields = useCallback(() => {
+    if (post?.feelings) {
+      getFeeling(post?.feelings);
+    }
+
+    if (post?.bgColor) {
+      postData.bgColor = post?.bgColor;
+      setPostData(postData);
+      setTextAreaBackground(post?.bgColor);
+      setTimeout(() => {
+        if (inputRef?.current) {
+          postData.post = post?.post;
+          inputRef.current.textContent = post?.post;
+          setPostData(postData);
+          PostUtils.positionCursor('editable');
+        }
+      });
+    }
+
+    if (post?.gifUrl && !post?.imgId) {
+      postData.gifUrl = post?.gifUrl;
+      postData.imgId = '';
+      postData.imgVersion = '';
+      postData.image = '';
+      setPostImage(post?.gifUrl);
+      postInputData();
+    }
+
+    if (post?.imgId && !post?.gifUrl) {
+      postData.imgId = post?.imgId;
+      postData.imgVersion = post?.imgVersion;
+      const imageUrl = Utils.getImage(post?.imgId, post?.imgVersion);
+      setPostImage(imageUrl);
+      postInputData();
+    }
+  }, [post, postData, getFeeling, postInputData]);
+
   useEffect(() => {
     PostUtils.positionCursor('editable');
+  }, [post]);
+
+  useEffect(() => {
+    setTimeout(() => {
+      if (imageInputRef?.current && imageInputRef?.current.textContent?.length) {
+        const counter = maxNumberOfCharacters - imageInputRef?.current.textContent?.length;
+        counterRef.current!.textContent = `${counter}/255`;
+      } else if (inputRef?.current && inputRef?.current.textContent?.length) {
+        const counter = maxNumberOfCharacters - inputRef?.current.textContent?.length;
+        counterRef.current!.textContent = `${counter}/255`;
+      }
+    });
   }, []);
 
   useEffect(() => {
     if (!loading && apiResponse === 'success') {
       PostUtils.closePostModal(dispatch);
     }
-    setDisable(postData.post.length <= 0 && !postImage);
-  }, [loading, dispatch, apiResponse, postData, postImage]);
+    setDisable(post?.post.length <= 0 && !postImage);
+  }, [loading, dispatch, apiResponse, post, postImage]);
 
   useEffect(() => {
-    if (gifUrl) {
-      setPostImage(gifUrl);
-      PostUtils.postInputData(imageInputRef, postData, '', setPostData);
-    } else if (image) {
-      setPostImage(image);
-      PostUtils.postInputData(imageInputRef, postData, '', setPostData);
+    if (post?.gifUrl) {
+      postData.image = '';
+      setSelectedPostItem(null);
+      setPostImage(post?.gifUrl);
+      PostUtils.postInputData(imageInputRef, postData, post?.post, setPostData);
+    } else if (post?.image) {
+      setPostImage(post?.image);
+      PostUtils.postInputData(imageInputRef, postData, post?.post, setPostData);
     }
-  }, [gifUrl, image, postData]);
+    editableFields();
+  }, [editableFields, post, postData]);
 
   return (
     <>
@@ -148,17 +215,17 @@ const AddPost = ({ selectedImage }: { selectedImage: File | null }) => {
           <div
             className="modal-box"
             style={{
-              height: selectedPostItem || gifUrl || image || postData?.gifUrl || postData?.image ? '700px' : 'auto'
+              height: selectedPostItem || post?.gifUrl || post?.imgId ? '700px' : 'auto'
             }}
           >
             {loading && (
               <div className="modal-box-loading">
-                <span>Posting...</span>
+                <span>Updating...</span>
                 <Spinner />
               </div>
             )}
             <div className="modal-box-header">
-              <h2>Create Post</h2>
+              <h2>Edit Post</h2>
               <button className="modal-box-header-cancel" onClick={closePostModal}>
                 X
               </button>
@@ -238,7 +305,7 @@ const AddPost = ({ selectedImage }: { selectedImage: File | null }) => {
             <ModalBoxSelection setSelectedImage={setSelectedPostItem} />
 
             <div className="modal-box-button">
-              <Button className="post-button" label="Next" disabled={disable} handleClick={createPost} />
+              <Button className="post-button" label="Update" disabled={disable} handleClick={updatePost} />
             </div>
           </div>
         )}
@@ -263,4 +330,4 @@ const AddPost = ({ selectedImage }: { selectedImage: File | null }) => {
   );
 };
 
-export default AddPost;
+export default EditPost;

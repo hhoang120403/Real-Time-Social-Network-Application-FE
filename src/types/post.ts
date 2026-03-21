@@ -1,6 +1,8 @@
-import type { Reaction } from './reaction';
+import type { ReactionType } from './reaction';
 
-export type PrivacyType = 'Public' | 'Private' | 'Friends';
+export type PrivacyType = 'Public' | 'Private' | 'Friends' | '';
+
+export type ReactionsMap = Record<ReactionType, number>;
 
 export interface PostItem {
   _id: string;
@@ -13,13 +15,13 @@ export interface PostItem {
   bgColor: string;
   feelings: string;
   privacy: PrivacyType;
-  reactions: Reaction;
+  reactions: ReactionsMap;
   commentsCount: number;
-  imgId: string;
-  imgVersion: string;
-  videoId: string;
-  videoVersion: string;
-  gifUrl: string;
+  imgId?: string;
+  imgVersion?: string;
+  videoId?: string;
+  videoVersion?: string;
+  gifUrl?: string;
   createdAt: string; // nếu muốn strict hơn có thể dùng Date
 }
 
@@ -31,6 +33,8 @@ interface PostData {
   gifUrl: string;
   profilePicture: string;
   image?: string;
+  imgId?: string;
+  imgVersion?: string;
 }
 
 interface Privacy {

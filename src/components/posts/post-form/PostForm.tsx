@@ -11,7 +11,8 @@ import { openModal, toggleFeelingModal, toggleGifModal, toggleImageModal } from 
 import AddPost from '../post-modal/post-add/AddPost';
 import { useRef } from 'react';
 import { ImageUtils } from '@services/utils/image-utils.service';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import EditPost from '../post-modal/post-edit/EditPost';
 
 const PostForm = () => {
   const { profile } = useSelector((state: RootState) => state.user);
@@ -21,6 +22,12 @@ const PostForm = () => {
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const dispatch = useDispatch<AppDispatch>();
+
+  useEffect(() => {
+    if (!isOpen) {
+      setSelectedImage(null);
+    }
+  }, [isOpen]);
 
   const openPostModal = () => {
     dispatch(openModal({ type: 'add' }));
@@ -92,6 +99,7 @@ const PostForm = () => {
         </div>
       </div>
       {isOpen && type === 'add' && <AddPost selectedImage={selectedImage} />}
+      {isOpen && type === 'edit' && <EditPost />}
     </>
   );
 };

@@ -1,4 +1,6 @@
 import type { LoginResponse } from '@app-types/api';
+import type { Reaction, ReactionType } from '@app-types/reaction';
+import type { FormattedReaction } from '@app-types/reactions';
 import type { NotificationType } from '@app-types/toast';
 import type { IUser } from '@app-types/user';
 import { addNotification, clearNotification } from '@redux/reducers/notifications/notification.reducer';
@@ -7,6 +9,7 @@ import type { AppDispatch } from '@redux/store';
 import type { ISettingsDropdownItem } from '@root/types/settings';
 import { avatarColors } from '@services/utils/static.data';
 import { floor, random, some } from 'lodash';
+import millify from 'millify';
 
 interface ClearStoreParams {
   dispatch: AppDispatch;
@@ -125,5 +128,28 @@ export class Utils {
   static firstLetterUpperCase(word: string) {
     if (!word) return '';
     return `${word.charAt(0).toUpperCase()}${word.slice(1)}`;
+  }
+
+  static formattedReactions(reactions: Reaction) {
+    const postReactions: FormattedReaction[] = [];
+    for (const [key, value] of Object.entries(reactions)) {
+      if (value > 0) {
+        const reationObject = {
+          type: key as ReactionType,
+          value
+        };
+        postReactions.push(reationObject);
+      }
+    }
+    return postReactions;
+  }
+
+  static shortenLargeNumber(num: number) {
+    if (num === undefined) return 0;
+    return millify(num);
+  }
+
+  static getImage(imageId: string, imageVersion: string) {
+    return imageId && imageVersion ? this.appImageUrl(imageVersion, imageId) : '';
   }
 }

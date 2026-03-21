@@ -4,13 +4,37 @@ import { timeAgo } from '@services/utils/timeago.utils';
 import { find } from 'lodash';
 import { FaPencilAlt, FaRegTrashAlt } from 'react-icons/fa';
 import './Post.scss';
+import PostCommentSection from '../post-comment-section/PostCommentSection';
+import { Utils } from '@services/utils/utils.service';
+import { useDispatch, useSelector } from 'react-redux';
+import type { AppDispatch, RootState } from '@redux/store';
+import ReactionsModal from '../reactions/reactions-modal/ReactionsModal';
+import type { PostItem } from '@app-types/post';
+import useLocalStorage from '@hooks/useLocalStorage';
+import CommentInputBox from '../comments/comment-input/CommentInputBox';
+import CommentsModal from '../comments/comments-modal/CommentsModal';
+import { useState } from 'react';
+import ImageModal from '@components/image-modal/ImageModal';
+import { openModal, toggleDeleteDialog } from '@redux/reducers/modal/modal.reducer';
+import { clearPost, updatePostItem } from '@redux/reducers/post/post.reducer';
+import Dialog from '@components/dialog/Dialog';
+import { postService } from '@services/api/post/post.service';
 
 interface PostProps {
-  post: any;
+  post: PostItem;
   showIcons: boolean;
 }
 
 const Post = ({ post, showIcons }: PostProps) => {
+  const { _id } = useSelector((state: RootState) => state.post);
+  const { reactionsModalIsOpen, commentsModalIsOpen, deleteDialogIsOpen } = useSelector(
+    (state: RootState) => state.modal
+  );
+  const [showImageModal, setShowImageModal] = useState<boolean>(false);
+  const [imageUrl, setImageUrl] = useState<string>('');
+  const selectedPostId = useLocalStorage('selectedPostId', 'get');
+  const dispatch = useDispatch<AppDispatch>();
+
   const getFeeling = (name: string) => {
     const feeling = find(feelingsList, (data) => data.name === name);
     return feeling?.image;
@@ -21,8 +45,48 @@ const Post = ({ post, showIcons }: PostProps) => {
     return privacy?.icon;
   };
 
+  const deletePost = async () => {
+    try {
+      const response = await postService.deletePost(_id);
+      if (response) {
+        Utils.dispatchNotification(response.data.message, 'success', dispatch);
+        dispatch(toggleDeleteDialog({ toggle: !deleteDialogIsOpen }));
+        dispatch(clearPost());
+      }
+    } catch (error: any) {
+      Utils.dispatchNotification(error.response?.data?.message, 'error', dispatch);
+    }
+  };
+
+  const openPostModal = () => {
+    dispatch(openModal({ type: 'edit' }));
+    dispatch(updatePostItem(post));
+  };
+
+  const openDeleteDialog = () => {
+    dispatch(toggleDeleteDialog({ toggle: !deleteDialogIsOpen }));
+    dispatch(updatePostItem(post));
+  };
+
   return (
     <>
+      {reactionsModalIsOpen && <ReactionsModal />}
+      {commentsModalIsOpen && <CommentsModal />}
+      {showImageModal && (
+        <ImageModal image={imageUrl} onCancel={() => setShowImageModal(!showImageModal)} showArrow={false} />
+      )}
+      {deleteDialogIsOpen && (
+        <Dialog
+          title="Are you sure you want to delete this post?"
+          firstButtonText="Delete"
+          secondButtonText="Cancel"
+          firstBtnHandler={deletePost}
+          secondBtnHandler={() => {
+            dispatch(toggleDeleteDialog({ toggle: !deleteDialogIsOpen }));
+            dispatch(clearPost());
+          }}
+        />
+      )}
       <div className="post-body" data-testid="post">
         <div className="user-post-data">
           <div className="user-post-data-wrap">
@@ -41,15 +105,15 @@ const Post = ({ post, showIcons }: PostProps) => {
                   {post?.username}
                   {post?.feelings && (
                     <div className="inline-display" data-testid="inline-display">
-                      is feeling <img className="feeling-icon" src={getFeeling(post?.feelings)} alt="" />{' '}
+                      is feeling <img className="feeling-icon" src={getFeeling(post?.feelings!)} alt="" />{' '}
                       <div>{post?.feelings}</div>
                     </div>
                   )}
                 </h5>
                 {showIcons && (
                   <div className="post-icons" data-testid="post-icons">
-                    <FaPencilAlt className="pencil" />
-                    <FaRegTrashAlt className="trash" />
+                    <FaPencilAlt className="pencil" onClick={openPostModal} />
+                    <FaRegTrashAlt className="trash" onClick={openDeleteDialog} />
                   </div>
                 )}
               </div>
@@ -78,19 +142,45 @@ const Post = ({ post, showIcons }: PostProps) => {
               )}
 
               {post?.imgId && !post?.gifUrl && post.bgColor === '#ffffff' && (
-                <div data-testid="post-image" className="image-display-flex">
-                  <img className="post-image" src="" alt="" />
+                <div
+                  data-testid="post-image"
+                  className="image-display-flex"
+                  onClick={() => {
+                    setImageUrl(Utils.getImage(post?.imgId!, post?.imgVersion!));
+                    setShowImageModal(!showImageModal);
+                  }}
+                >
+                  <img
+                    className="post-image"
+                    src={`${Utils.getImage(post?.imgId!, post?.imgVersion!)}`}
+                    alt="Post visual"
+                  />
                 </div>
               )}
 
               {post?.gifUrl && post.bgColor === '#ffffff' && (
-                <div className="image-display-flex">
+                <div
+                  className="image-display-flex"
+                  onClick={() => {
+                    setImageUrl(post?.gifUrl!);
+                    setShowImageModal(!showImageModal);
+                  }}
+                >
                   <img className="post-image" src={`${post?.gifUrl}`} alt="" />
                 </div>
               )}
-              {(post?.reactions.length > 0 || post?.commentsCount > 0) && <hr />}
+              {(post?.reactions.like > 0 ||
+                post?.reactions.love > 0 ||
+                post?.reactions.wow > 0 ||
+                post?.reactions.sad > 0 ||
+                post?.reactions.happy > 0 ||
+                post?.reactions.angry > 0 ||
+                Number(post?.commentsCount) > 0) && <hr />}
+              <PostCommentSection post={post} />
             </div>
           </div>
+
+          {selectedPostId === post._id && <CommentInputBox post={post} />}
         </div>
       </div>
     </>

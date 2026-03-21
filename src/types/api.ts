@@ -1,5 +1,5 @@
 import type { NotificationItem } from './notification';
-import type { Post } from './post';
+import type { PostItem } from './post';
 import type { IUser } from './user';
 
 export interface LoginResponse {
@@ -15,6 +15,6 @@ export interface NotificationsResponse {
 
 export interface GetAllPostsResponse {
   message: string;
-  posts: Post[];
+  posts: PostItem[];
   totalPosts: number;
 }

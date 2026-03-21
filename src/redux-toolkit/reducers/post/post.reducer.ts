@@ -1,8 +1,27 @@
-import type { PayloadAction } from '@reduxjs/toolkit';
 import { createSlice } from '@reduxjs/toolkit';
 import { emptyPostData } from '@services/utils/static.data';
+import type { ReactionsMap } from '@app-types/post';
+import type { PayloadAction } from '@reduxjs/toolkit';
 
-type PostState = typeof emptyPostData;
+export interface PostState {
+  _id: string;
+  post: string;
+  bgColor: string;
+  privacy: string;
+  feelings: string;
+  gifUrl: string;
+  profilePicture: string;
+  image: string;
+  userId: string;
+  username: string;
+  email: string;
+  avatarColor: string;
+  commentsCount: number | string;
+  reactions: ReactionsMap;
+  imgVersion: string;
+  imgId: string;
+  createdAt: string;
+}
 
 const initialState: PostState = emptyPostData;
 
@@ -11,9 +30,7 @@ const postSlice = createSlice({
   initialState,
   reducers: {
     updatePostItem: (state, action: PayloadAction<Partial<PostState>>) => {
-      for (const [key, value] of Object.entries(action.payload)) {
-        state[key] = value;
-      }
+      Object.assign(state, action.payload);
     },
     clearPost: () => {
       return emptyPostData;
