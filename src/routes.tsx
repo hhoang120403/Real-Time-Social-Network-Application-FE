@@ -6,6 +6,7 @@ import StreamsSkeleton from '@pages/social/streams/StreamsSkeleton';
 import { lazy, Suspense } from 'react';
 import NotificationSkeleton from '@pages/social/notifications/NotificationSkeleton';
 import CardSkeleton from '@components/card-element/CardSkeleton';
+import PhotoSkeleton from '@pages/social/photos/PhotoSkeleton';
 
 const Social = lazy(() => import('@pages/social/Social'));
 const Chat = lazy(() => import('@pages/social/chat/Chat'));
@@ -66,7 +67,7 @@ export const AppRouter = () => {
         {
           path: 'followers',
           element: (
-            <Suspense>
+            <Suspense fallback={<CardSkeleton />}>
               <Followers />
             </Suspense>
           )
@@ -74,7 +75,7 @@ export const AppRouter = () => {
         {
           path: 'following',
           element: (
-            <Suspense>
+            <Suspense fallback={<CardSkeleton />}>
               <Following />
             </Suspense>
           )
@@ -82,7 +83,7 @@ export const AppRouter = () => {
         {
           path: 'photos',
           element: (
-            <Suspense>
+            <Suspense fallback={<PhotoSkeleton />}>
               <Photos />
             </Suspense>
           )

@@ -32,7 +32,7 @@ const Posts = ({ allPosts, userFollowing, postsLoading }: PostsProps) => {
         posts.map((post) => (
           <div key={post?._id}>
             {(!Utils.checkIfUserIsBlocked(profile?.blockedBy || [], post?.userId) || post?.userId === profile?._id) && (
-              <>{PostUtils.checkPrivacy(post, profile, following) && <Post post={post} showIcons={true} />}</>
+              <>{PostUtils.checkPrivacy(post, profile, following) && <Post post={post} showIcons={false} />}</>
             )}
           </div>
         ))}

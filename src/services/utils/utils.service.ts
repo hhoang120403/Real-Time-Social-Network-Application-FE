@@ -8,7 +8,7 @@ import { addUser, clearUser } from '@redux/reducers/user/user.reducer';
 import type { AppDispatch } from '@redux/store';
 import type { ISettingsDropdownItem } from '@root/types/settings';
 import { avatarColors } from '@services/utils/static.data';
-import { floor, random, some } from 'lodash';
+import { findIndex, floor, random, some } from 'lodash';
 import millify from 'millify';
 
 interface ClearStoreParams {
@@ -117,8 +117,8 @@ export class Utils {
     return some(blocked, (id) => id === userId);
   }
 
-  static checkIfUserIsFollowed(userFollowers: any[], postCreatorId: string, userId: string) {
-    return some(userFollowers, (user) => user._id === postCreatorId || postCreatorId === userId);
+  static checkIfUserIsFollowed(userFollowers: any[], userId: string) {
+    return some(userFollowers, (user) => user._id === userId);
   }
 
   static checkIfUserIsOnline(username: string, onlineUsers: string[]) {
@@ -151,5 +151,13 @@ export class Utils {
 
   static getImage(imageId: string, imageVersion: string) {
     return imageId && imageVersion ? this.appImageUrl(imageVersion, imageId) : '';
+  }
+
+  static removeUserFromList(list: any[], userId: string) {
+    const index = findIndex(list, (id) => id === userId);
+    if (index > -1) {
+      list.splice(index, 1);
+    }
+    return list;
   }
 }

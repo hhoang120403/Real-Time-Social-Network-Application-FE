@@ -23,15 +23,17 @@ interface ICommentAreaProps {
 const CommentArea = ({ post }: ICommentAreaProps) => {
   const { profile } = useSelector((state: RootState) => state.user);
   let { reactions } = useSelector((state: RootState) => state.userPostReaction);
-  const [selectedReaction, setSelectedReaction] = useState<string>('');
+  const [selectedReaction, setSelectedReaction] = useState<string>('like');
   const selectedPostId = useLocalStorage('selectedPostId', 'get');
   const [setSelectedPostId] = useLocalStorage('selectedPostId', 'set');
   const dispatch = useDispatch<AppDispatch>();
 
+  const [showReactions, setShowReactions] = useState<boolean>(true);
+
   const selectedUserReaction = useCallback(
     (postReactions: any[]) => {
       const userReaction = find(postReactions, (reaction) => reaction.postId === post._id);
-      const result = userReaction ? Utils.firstLetterUpperCase(userReaction.type) : '';
+      const result = userReaction ? Utils.firstLetterUpperCase(userReaction.type) : 'Like';
       setSelectedReaction(result);
     },
     [post]
@@ -58,6 +60,7 @@ const CommentArea = ({ post }: ICommentAreaProps) => {
 
   const addReactionPost = async (reaction: ReactionType) => {
     try {
+      setShowReactions(false);
       const reactionResponse = await postService.getSinglePostReactionByUsername(post._id!, profile!.username);
       post = await updatePostReaction(
         reaction,
@@ -169,28 +172,21 @@ const CommentArea = ({ post }: ICommentAreaProps) => {
 
   return (
     <div className="comment-area" data-testid="comment-area">
-      <div className="like-icon reactions">
+      <div className="like-icon reactions" onMouseEnter={() => setShowReactions(true)}>
         <div className="likes-block" onClick={() => addReactionPost('like')}>
           <div className={`likes-block-icons reaction-icon ${selectedReaction.toLowerCase()}`}>
-            {selectedReaction && (
-              <div className={`reaction-display ${selectedReaction.toLowerCase()}`} data-testid="selected-reaction">
-                <img
-                  className="reaction-img"
-                  src={reactionsMap[selectedReaction.toLowerCase() as keyof typeof reactionsMap]}
-                  alt=""
-                />
-                <span>{selectedReaction}</span>
-              </div>
-            )}
-            {!selectedReaction && (
-              <div className="reaction-display" data-testid="default-reaction">
-                <img className="reaction-img" src={reactionsMap['like']} alt="" /> <span>Like</span>
-              </div>
-            )}
+            <div className={`reaction-display ${selectedReaction.toLowerCase()}`} data-testid="selected-reaction">
+              <img
+                className="reaction-img"
+                src={reactionsMap[selectedReaction.toLowerCase() as keyof typeof reactionsMap]}
+                alt=""
+              />
+              <span>{selectedReaction}</span>
+            </div>
           </div>
         </div>
         <div className="reactions-container app-reactions">
-          <Reactions handleClick={addReactionPost} />
+          {showReactions && <Reactions handleClick={addReactionPost} />}
         </div>
       </div>
       <div className="comment-block" onClick={toggleCommentInput}>

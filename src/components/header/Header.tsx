@@ -1,4 +1,4 @@
-import logo from '@assets/images/logo.svg';
+import logo from '@assets/images/logo.png';
 import { FaCaretDown, FaRegBell, FaRegEnvelope } from 'react-icons/fa';
 import '@components/header/Header.scss';
 import Avatar from '@components/avatar/Avatar';

@@ -17,10 +17,12 @@ import useInfiniteScroll from '@hooks/useInfiniteScroll';
 import { PostUtils } from '@services/utils/post-utils.service';
 import useLocalStorage from '@hooks/useLocalStorage';
 import { addReactions } from '@redux/reducers/post/user-post-reaction.reducer';
+import { followerService } from '@services/api/followers/follower.service';
 
 const Streams = () => {
   const { allPosts } = useSelector((state: RootState) => state);
   const [posts, setPosts] = useState<any[]>([]);
+  const [following, setFollowing] = useState<any[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [totalPostsCount, setTotalPostsCount] = useState<number>(0);
@@ -64,20 +66,27 @@ const Streams = () => {
       const response = await postService.getReactionsByUsername(storedUsername);
       dispatch(addReactions(response.data.reactions));
     } catch (error: any) {
-      Utils.dispatchNotification(error.response.data.message, 'error', dispatch);
+      Utils.dispatchNotification(error.response?.data?.message, 'error', dispatch);
+    }
+  };
+
+  const getUserFollowing = async () => {
+    try {
+      const response = await followerService.getUserFollowing();
+      setFollowing(response.data.following);
+    } catch (error: any) {
+      Utils.dispatchNotification(error.response?.data?.message, 'error', dispatch);
     }
   };
 
   useEffectOnce(() => {
     // getAllPosts();
+    getUserFollowing();
     getReactionsByUsername();
     deleteSelectedPostId();
-  });
-
-  useEffect(() => {
     dispatch(getPosts());
     dispatch(getUserSuggestions());
-  }, [dispatch]);
+  });
 
   useEffect(() => {
     setLoading(allPosts?.isLoading);
@@ -94,7 +103,7 @@ const Streams = () => {
       <div className="streams-content">
         <div className="streams-post" ref={bodyRef}>
           <PostForm />
-          <Posts allPosts={posts} userFollowing={[]} postsLoading={loading} />
+          <Posts allPosts={posts} userFollowing={following} postsLoading={loading} />
           <div style={{ marginBottom: '50px', height: '50px' }} ref={bottomLineRef}></div>
         </div>
         <div className="streams-suggestions">
