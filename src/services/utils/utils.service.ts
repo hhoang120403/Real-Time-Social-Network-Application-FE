@@ -160,4 +160,8 @@ export class Utils {
     }
     return list;
   }
+
+  static checkUrl(url: string, word: string) {
+    return url.includes(word);
+  }
 }

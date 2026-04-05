@@ -11,6 +11,7 @@ import { Utils } from '@services/utils/utils.service';
 import { Navigate, useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import type { RootState } from '@redux/store';
+import { getConversationList } from '@redux/api/chat';
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { profile, token } = useSelector((state: RootState) => state.user);
@@ -28,6 +29,7 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
     try {
       const response = await userService.checkCurrentUser();
       if (response.data.user) {
+        dispatch(getConversationList());
         setUserData(response.data.user);
         setTokenIsValid(true);
         dispatch(addUser({ token: response.data.token, profile: response.data.user }));

@@ -19,12 +19,13 @@ import type { RootState } from '@redux/store';
 import { FollowersUtilsService } from '@services/utils/followers-utils.service';
 import { socketService } from '@services/socket/socket.service';
 import { followerService } from '@services/api/followers/follower.service';
+import { ChatUtils } from '@services/utils/chat-utils.service';
 
 const People = () => {
   const { profile } = useSelector((state: RootState) => state.user);
   const [users, setUsers] = useState<IUser[]>([]);
   const [following, setFollowing] = useState<any[]>([]);
-  const [onlineUsers] = useState<string[]>([]);
+  const [onlineUsers, setOnlineUsers] = useState<string[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [totalUsers, setTotalUsers] = useState<number>(0);
@@ -101,6 +102,7 @@ const People = () => {
 
   useEffect(() => {
     FollowersUtilsService.socketIOFollowAndUnfollow(users, following, setFollowing, setUsers);
+    ChatUtils.usersOnline(setOnlineUsers);
   }, [users, following]);
 
   return (

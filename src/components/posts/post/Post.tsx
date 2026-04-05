@@ -96,6 +96,7 @@ const Post = ({ post, showIcons }: PostProps) => {
       {deleteDialogIsOpen && (
         <Dialog
           title="Are you sure you want to delete this post?"
+          showButtons={true}
           firstButtonText="Delete"
           secondButtonText="Cancel"
           firstBtnHandler={deletePost}
