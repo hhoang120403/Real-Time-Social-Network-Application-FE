@@ -2,38 +2,39 @@ import Skeleton from 'react-loading-skeleton';
 
 const HeaderSkeleton = () => {
   return (
-    <div className="header-nav-wrapper" data-testid="header-skeleton">
-      <div className="header-navbar">
-        <div className="header-image">
-          <Skeleton baseColor="#EFF1F6" circle height={50} width={50} containerClassName="img-fluid" />
-          <Skeleton
-            baseColor="#EFF1F6"
-            width={80}
-            height={20}
-            style={{ marginLeft: '5px' }}
-            containerClassName="app-name-skeleton"
-          />
+    <header
+      className="fixed top-0 z-100 box-border flex h-[70px] w-full items-center justify-between bg-white px-6 py-2 border-b border-gray-100 shadow-sm"
+      data-testid="header-skeleton"
+    >
+      {/* Left Side Skeleton */}
+      <div className="flex items-center gap-4 shrink-0">
+        <div className="flex h-10 w-10 items-center justify-center">
+          <Skeleton baseColor="#F3F4F6" circle height={40} width={40} />
         </div>
-        <ul className="header-nav">
-          <li className="header-nav-item active-item">
-            <Skeleton baseColor="#EFF1F6" circle height={20} width={20} style={{ marginRight: '20px' }} />
-            &nbsp;
-          </li>
-          <li className="header-nav-item active-item">
-            <Skeleton baseColor="#EFF1F6" circle height={20} width={20} style={{ marginRight: '10px' }} />
-            &nbsp;
-          </li>
-          <li className="header-nav-item">
-            <span className="header-list-name profile-image">
-              <Skeleton baseColor="#EFF1F6" circle height={40} width={40} containerClassName="avatar-skeleton" />
-            </span>
-            <span className="header-list-name profile-name">
-              <Skeleton baseColor="#EFF1F6" width={80} height={20} style={{ marginLeft: '5px' }} />
-            </span>
-          </li>
-        </ul>
+        <div className="flex items-center gap-2">
+          <Skeleton baseColor="#F3F4F6" circle height={36} width={36} />
+          <div className="flex flex-col">
+            <Skeleton baseColor="#F3F4F6" width={80} height={24} />
+          </div>
+        </div>
       </div>
-    </div>
+
+      {/* Middle Side Skeleton (Search Bar) */}
+      <div className="hidden sm:flex flex-1 justify-center px-6 max-w-[700px]">
+        <div className="w-full max-w-[600px]">
+          <Skeleton baseColor="#F9FAFB" height={46} borderRadius={16} />
+        </div>
+      </div>
+
+      {/* Right Side Skeleton */}
+      <div className="flex items-center gap-3 sm:gap-5 shrink-0">
+        <Skeleton baseColor="#F3F4F6" circle height={40} width={40} />
+        <Skeleton baseColor="#F3F4F6" circle height={40} width={40} />
+        <div className="ml-2">
+          <Skeleton baseColor="#F3F4F6" circle height={32} width={32} />
+        </div>
+      </div>
+    </header>
   );
 };
 export default HeaderSkeleton;

@@ -41,6 +41,7 @@ export class PostUtils {
   ) {
     postData.gifUrl = '';
     postData.image = '';
+    postData.video = '';
     setSelectedPostImage(null);
     setPostImage('');
     setTimeout(() => {
@@ -53,7 +54,7 @@ export class PostUtils {
       }
       PostUtils.positionCursor('editable');
     });
-    dispatch(updatePostItem({ gifUrl: '', image: '', imgId: '', imgVersion: '' }));
+    dispatch(updatePostItem({ gifUrl: '', image: '', video: '', imgId: '', imgVersion: '', videoId: '', videoVersion: '' }));
   }
 
   static postInputData(
@@ -100,6 +101,30 @@ export class PostUtils {
         imageInputRef.current.textContent = postData.post;
       }
       const response = await postService.createPostWithImage(postData);
+      if (response) {
+        setApiResponse('success');
+        setLoading(false);
+        return response;
+      }
+    } catch (error: any) {
+      PostUtils.dispatchNotification(error.response.data.message, 'error', setApiResponse, setLoading, dispatch);
+    }
+  }
+  
+  static async sendPostWithVideoRequest(
+    fileResult: string,
+    postData: PostData,
+    imageInputRef: React.RefObject<HTMLDivElement | null>,
+    setApiResponse: (value: string) => void,
+    setLoading: (value: boolean) => void,
+    dispatch: Dispatch
+  ) {
+    try {
+      postData.video = fileResult;
+      if (imageInputRef?.current) {
+        imageInputRef.current.textContent = postData.post;
+      }
+      const response = await postService.createPostWithVideo(postData);
       if (response) {
         setApiResponse('success');
         setLoading(false);
@@ -203,40 +228,66 @@ export class PostUtils {
     element?.focus();
   }
 
-  static socketIOPost(posts: PostItem[], setPosts: (posts: PostItem[]) => void) {
-    posts = cloneDeep(posts);
+  static socketIOPost(setPosts: React.Dispatch<React.SetStateAction<PostItem[]>>) {
+    socketService?.socket?.off('add post');
     socketService?.socket?.on('add post', (post: PostItem) => {
-      posts = [post, ...posts];
-      setPosts(posts);
+      setPosts((prevPosts) => [post, ...prevPosts]);
     });
 
+    socketService?.socket?.off('update post');
     socketService?.socket?.on('update post', (post: PostItem) => {
-      PostUtils.updateSinglePost(posts, post, setPosts);
+      setPosts((prevPosts) => {
+        const posts = cloneDeep(prevPosts);
+        const index = findIndex(posts, (p) => String(p._id) === String(post?._id));
+        if (index > -1) {
+          posts.splice(index, 1, post);
+        }
+        return posts;
+      });
     });
 
+    socketService?.socket?.off('delete post');
     socketService?.socket?.on('delete post', (postId: string) => {
-      const index = findIndex(posts, (postData) => postData._id === postId);
-      if (index > -1) {
-        posts = cloneDeep(posts);
-        remove(posts, { _id: postId });
-        setPosts(posts);
-      }
+      setPosts((prevPosts) => {
+        const posts = cloneDeep(prevPosts);
+        const index = findIndex(posts, (postData) => String(postData._id) === String(postId));
+        if (index > -1) {
+          remove(posts, (p) => String(p._id) === String(postId));
+        }
+        return posts;
+      });
     });
 
+    socketService?.socket?.off('update like');
     socketService?.socket?.on('update like', (reactionData: any) => {
-      const postData = find(posts, (post) => post._id === reactionData?.postId);
-      if (postData) {
-        postData.reactions = reactionData.postReactions;
-        PostUtils.updateSinglePost(posts, postData, setPosts);
-      }
+      setPosts((prevPosts) => {
+        const posts = cloneDeep(prevPosts);
+        const postData = find(posts, (post) => String(post._id) === String(reactionData?.postId));
+        if (postData) {
+          postData.reactions = reactionData.postReactions;
+          const index = findIndex(posts, (p) => String(p._id) === String(postData?._id));
+          if (index > -1) {
+            posts.splice(index, 1, postData);
+          }
+        }
+        return posts;
+      });
     });
 
+    socketService?.socket?.off('update comment');
     socketService?.socket?.on('update comment', (commentData: any) => {
-      const postData = find(posts, (post) => post._id === commentData?.postId);
-      if (postData) {
-        postData.commentsCount = commentData.commentsCount;
-        PostUtils.updateSinglePost(posts, postData, setPosts);
-      }
+      setPosts((prevPosts) => {
+        const posts = cloneDeep(prevPosts);
+        const postData = find(posts, (post) => String(post._id) === String(commentData?.postId));
+        if (postData) {
+          postData.commentsCount = commentData.commentsCount;
+          const index = findIndex(posts, (p) => String(p._id) === String(postData?._id));
+          if (index > -1) {
+            posts.splice(index, 1, postData);
+          }
+        }
+        return posts;
+      });
     });
   }
 

@@ -20,6 +20,11 @@ class AuthService {
     const response = await axiosInstance.post(`/reset-password/${token}`, data);
     return response;
   }
+
+  async verifyEmail(token: string) {
+    const response = await axiosInstance.post('/verify-email', { token });
+    return response;
+  }
 }
 
 export const authService = new AuthService();

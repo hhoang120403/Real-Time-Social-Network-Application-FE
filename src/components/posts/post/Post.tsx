@@ -2,8 +2,7 @@ import Avatar from '@components/avatar/Avatar';
 import { feelingsList, privacyList } from '@services/utils/static.data';
 import { timeAgo } from '@services/utils/timeago.utils';
 import { find } from 'lodash';
-import { FaPencilAlt, FaRegTrashAlt } from 'react-icons/fa';
-import './Post.scss';
+import { FaPencilAlt, FaRegTrashAlt, FaEllipsisH } from 'react-icons/fa';
 import PostCommentSection from '../post-comment-section/PostCommentSection';
 import { Utils } from '@services/utils/utils.service';
 import { useDispatch, useSelector } from 'react-redux';
@@ -15,27 +14,32 @@ import CommentInputBox from '../comments/comment-input/CommentInputBox';
 import CommentsModal from '../comments/comments-modal/CommentsModal';
 import { useEffect, useState } from 'react';
 import ImageModal from '@components/image-modal/ImageModal';
-import { openModal, toggleDeleteDialog } from '@redux/reducers/modal/modal.reducer';
+import { openModal, toggleDeletePostDialog } from '@redux/reducers/modal/modal.reducer';
 import { clearPost, updatePostItem } from '@redux/reducers/post/post.reducer';
-import Dialog from '@components/dialog/Dialog';
-import { postService } from '@services/api/post/post.service';
 import { ImageUtils } from '@services/utils/image-utils.service';
+import { useNavigate } from 'react-router-dom';
+import { ProfileUtils } from '@services/utils/profile-utils.service';
+import { postService } from '@services/api/post/post.service';
+import Dialog from '@components/dialog/Dialog';
 
 interface PostProps {
   post: PostItem;
   showIcons: boolean;
+  setPosts?: React.Dispatch<React.SetStateAction<any[]>>;
 }
 
-const Post = ({ post, showIcons }: PostProps) => {
-  const { _id } = useSelector((state: RootState) => state.post);
-  const { reactionsModalIsOpen, commentsModalIsOpen, deleteDialogIsOpen } = useSelector(
+const Post = ({ post, showIcons, setPosts }: PostProps) => {
+  const { profile } = useSelector((state: RootState) => state.user);
+  const { reactionsModalIsOpen, commentsModalIsOpen, deletePostDialogIsOpen, data } = useSelector(
     (state: RootState) => state.modal
   );
   const [showImageModal, setShowImageModal] = useState<boolean>(false);
+  const [showActionDropdown, setShowActionDropdown] = useState<boolean>(false);
   const [imageUrl, setImageUrl] = useState<string>('');
   const [backgroundImageColor, setBackgroundImageColor] = useState<string>('');
   const selectedPostId = useLocalStorage('selectedPostId', 'get');
   const dispatch = useDispatch<AppDispatch>();
+  const navigate = useNavigate();
 
   const getFeeling = (name: string) => {
     const feeling = find(feelingsList, (data) => data.name === name);
@@ -49,11 +53,14 @@ const Post = ({ post, showIcons }: PostProps) => {
 
   const deletePost = async () => {
     try {
-      const response = await postService.deletePost(_id);
+      const response = await postService.deletePost(post._id);
       if (response) {
         Utils.dispatchNotification(response.data.message, 'success', dispatch);
-        dispatch(toggleDeleteDialog({ toggle: !deleteDialogIsOpen }));
+        dispatch(toggleDeletePostDialog({ toggle: false, data: null }));
         dispatch(clearPost());
+        if (setPosts) {
+          setPosts((prevPosts: any[]) => prevPosts.filter((item) => item._id !== post._id));
+        }
       }
     } catch (error: any) {
       Utils.dispatchNotification(error.response?.data?.message, 'error', dispatch);
@@ -66,7 +73,7 @@ const Post = ({ post, showIcons }: PostProps) => {
   };
 
   const openDeleteDialog = () => {
-    dispatch(toggleDeleteDialog({ toggle: !deleteDialogIsOpen }));
+    dispatch(toggleDeletePostDialog({ toggle: true, data: post._id }));
     dispatch(updatePostItem(post));
   };
 
@@ -93,115 +100,204 @@ const Post = ({ post, showIcons }: PostProps) => {
       {showImageModal && (
         <ImageModal image={imageUrl} onCancel={() => setShowImageModal(!showImageModal)} showArrow={false} />
       )}
-      {deleteDialogIsOpen && (
+      {deletePostDialogIsOpen && data && data === post?._id && (
         <Dialog
           title="Are you sure you want to delete this post?"
+          subTitle="Do you really want to delete this item? You won’t be able to recover it."
+          showButtons={true}
           firstButtonText="Delete"
           secondButtonText="Cancel"
           firstBtnHandler={deletePost}
           secondBtnHandler={() => {
-            dispatch(toggleDeleteDialog({ toggle: !deleteDialogIsOpen }));
+            dispatch(toggleDeletePostDialog({ toggle: false, data: null }));
             dispatch(clearPost());
           }}
         />
       )}
-      <div className="post-body" data-testid="post">
-        <div className="user-post-data">
-          <div className="user-post-data-wrap">
-            <div className="user-post-image">
+      <div className="p-4 mt-4 mb-6 bg-white rounded-2xl shadow-[0_2px_12px_rgba(0,0,0,0.08)]" data-testid="post">
+        <div className="flex flex-col w-full">
+          {/* Header Section */}
+          <div className="flex gap-3 items-start w-full mb-3">
+            <div
+              className="shrink-0 cursor-pointer"
+              onClick={() =>
+                ProfileUtils.navigateToProfile(
+                  { _id: post?.userId, uId: (post as any)?.uId, username: post?.username } as any,
+                  navigate
+                )
+              }
+            >
               <Avatar
                 name={post?.username}
-                bgColor={post?.avatarColor}
+                bgColor={profile?.username === post?.username ? profile?.avatarColor : post?.avatarColor}
                 textColor="#ffffff"
                 size={50}
-                avatarSrc={post?.profilePicture}
+                avatarSrc={profile?.username === post?.username ? profile?.profilePicture : post?.profilePicture}
               />
             </div>
-            <div className="user-post-info">
-              <div className="inline-title-display">
-                <h5 data-testid="username">
-                  {post?.username}
+            <div className="flex-1 min-w-0">
+              <div className="flex items-start justify-between gap-2">
+                <div className="flex flex-wrap items-center gap-x-1 gap-y-0.5 min-w-0">
+                  <h5
+                    data-testid="username"
+                    className="text-[15px] font-bold text-[#050505] hover:underline cursor-pointer leading-none"
+                    onClick={() =>
+                      ProfileUtils.navigateToProfile(
+                        { _id: post?.userId, uId: (post as any)?.uId, username: post?.username } as any,
+                        navigate
+                      )
+                    }
+                  >
+                    {post?.username}
+                  </h5>
                   {post?.feelings && (
-                    <div className="inline-display" data-testid="inline-display">
-                      is feeling <img className="feeling-icon" src={getFeeling(post?.feelings!)} alt="" />{' '}
-                      <div>{post?.feelings}</div>
+                    <div
+                      className="flex items-center gap-1 text-[15px] text-[#65676b] leading-none"
+                      data-testid="inline-display"
+                    >
+                      <span>is feeling</span>
+                      <img className="w-7 h-7 object-contain" src={getFeeling(post?.feelings!)} alt="" />
+                      <span className="font-bold text-[#050505]">{post?.feelings}</span>
                     </div>
                   )}
-                </h5>
+                </div>
+
                 {showIcons && (
-                  <div className="post-icons" data-testid="post-icons">
-                    <FaPencilAlt className="pencil" onClick={openPostModal} />
-                    <FaRegTrashAlt className="trash" onClick={openDeleteDialog} />
+                  <div className="relative shrink-0" data-testid="post-icons">
+                    <div
+                      className="w-8 h-8 rounded-full hover:bg-[#f0f2f5] flex items-center justify-center cursor-pointer transition-colors"
+                      onClick={() => setShowActionDropdown(!showActionDropdown)}
+                    >
+                      <FaEllipsisH className="text-[#65676b]" />
+                    </div>
+
+                    {showActionDropdown && (
+                      <>
+                        <div className="fixed inset-0 z-40" onClick={() => setShowActionDropdown(false)}></div>
+                        <div className="absolute right-0 top-10 w-48 bg-white rounded-lg shadow-[0_2px_12px_rgba(0,0,0,0.2)] border border-[#f0f2f5] z-50 overflow-hidden py-2 p-1">
+                          <div
+                            className="flex items-center gap-3 px-3 py-2 hover:bg-[#f0f2f5] rounded-md mx-1 cursor-pointer transition-colors"
+                            onClick={() => {
+                              setShowActionDropdown(false);
+                              openPostModal();
+                            }}
+                          >
+                            <FaPencilAlt className="text-[#050505]" />
+                            <span className="text-[15px] font-medium text-[#050505]">Edit Post</span>
+                          </div>
+                          <div
+                            className="flex items-center gap-3 px-3 py-2 hover:bg-[#f0f2f5] rounded-md mx-1 cursor-pointer transition-colors"
+                            onClick={() => {
+                              setShowActionDropdown(false);
+                              openDeleteDialog();
+                            }}
+                          >
+                            <FaRegTrashAlt className="text-[#050505]" />
+                            <span className="text-[15px] font-medium text-[#050505]">Delete Post</span>
+                          </div>
+                        </div>
+                      </>
+                    )}
                   </div>
                 )}
               </div>
 
               {post?.createdAt && (
-                <p className="time-text-display" data-testid="time-display">
-                  {timeAgo.transform(post?.createdAt)} &middot; {getPrivacy(post?.privacy)}
-                </p>
-              )}
-            </div>
-            <hr />
-            <div className="user-post" style={{ marginTop: '1rem', borderBottom: '' }}>
-              {post?.post && post?.bgColor === '#ffffff' && (
-                <p className="post" data-testid="user-post">
-                  {post?.post}
-                </p>
-              )}
-              {post?.post && post?.bgColor !== '#ffffff' && (
-                <div
-                  data-testid="user-post-with-bg"
-                  className="user-post-with-bg"
-                  style={{ backgroundColor: `${post?.bgColor}` }}
-                >
-                  {post?.post}
+                <div className="flex items-center gap-1 text-[13px] text-[#65676b] mt-0.5" data-testid="time-display">
+                  <span>{timeAgo.transform(post?.createdAt)}</span>
+                  <span>&middot;</span>
+                  <div className="flex items-center">{getPrivacy(post?.privacy)}</div>
                 </div>
               )}
-
-              {post?.imgId && !post?.gifUrl && post.bgColor === '#ffffff' && (
-                <div
-                  data-testid="post-image"
-                  className="image-display-flex"
-                  style={{ height: '600px', backgroundColor: backgroundImageColor }}
-                  onClick={() => {
-                    setImageUrl(Utils.getImage(post?.imgId!, post?.imgVersion!));
-                    setShowImageModal(!showImageModal);
-                  }}
-                >
-                  <img
-                    className="post-image"
-                    style={{ objectFit: 'contain' }}
-                    src={`${Utils.getImage(post?.imgId!, post?.imgVersion!)}`}
-                    alt="Post visual"
-                  />
-                </div>
-              )}
-
-              {post?.gifUrl && post.bgColor === '#ffffff' && (
-                <div
-                  className="image-display-flex"
-                  style={{ height: '600px', backgroundColor: backgroundImageColor }}
-                  onClick={() => {
-                    setImageUrl(post?.gifUrl!);
-                    setShowImageModal(!showImageModal);
-                  }}
-                >
-                  <img className="post-image" style={{ objectFit: 'contain' }} src={`${post?.gifUrl}`} alt="" />
-                </div>
-              )}
-              {(post?.reactions.like > 0 ||
-                post?.reactions.love > 0 ||
-                post?.reactions.wow > 0 ||
-                post?.reactions.sad > 0 ||
-                post?.reactions.happy > 0 ||
-                post?.reactions.angry > 0 ||
-                Number(post?.commentsCount) > 0) && <hr />}
-              <PostCommentSection post={post} />
             </div>
           </div>
 
-          {selectedPostId === post._id && <CommentInputBox post={post} />}
+          <div className="w-full">
+            {/* Post Text Content */}
+            {post?.post && post?.bgColor === '#ffffff' && (
+              <p
+                className="text-[#050505] text-[15px] whitespace-pre-wrap wrap-break-word mb-3"
+                data-testid="user-post"
+              >
+                {post?.post}
+              </p>
+            )}
+
+            {/* Post with Background Color */}
+            {post?.post && post?.bgColor !== '#ffffff' && (
+              <div
+                data-testid="user-post-with-bg"
+                className="w-full min-h-[300px] flex items-center justify-center text-center p-8 text-white text-[28px] font-bold rounded-xl mb-3 overflow-y-auto break-all"
+                style={{ backgroundColor: `${post?.bgColor}` }}
+              >
+                {post?.post}
+              </div>
+            )}
+
+            {/* Post Image Content */}
+            {post?.imgId && !post?.gifUrl && post.bgColor === '#ffffff' && (
+              <div
+                data-testid="post-image"
+                className="flex items-center justify-center w-full min-h-[300px] max-h-[600px] rounded-lg overflow-hidden cursor-pointer mb-3"
+                style={{ backgroundColor: backgroundImageColor }}
+                onClick={() => {
+                  setImageUrl(Utils.getImage(post?.imgId!, post?.imgVersion!));
+                  setShowImageModal(!showImageModal);
+                }}
+              >
+                <img
+                  className="max-w-full max-h-[600px] object-contain"
+                  src={`${Utils.getImage(post?.imgId!, post?.imgVersion!)}`}
+                  alt="Post visual"
+                />
+              </div>
+            )}
+
+            {/* Post GIF Content */}
+            {post?.gifUrl && post.bgColor === '#ffffff' && (
+              <div
+                className="flex items-center justify-center w-full min-h-[300px] max-h-[600px] rounded-lg overflow-hidden cursor-pointer mb-3"
+                style={{ backgroundColor: backgroundImageColor }}
+                onClick={() => {
+                  setImageUrl(post?.gifUrl!);
+                  setShowImageModal(!showImageModal);
+                }}
+              >
+                <img className="max-w-full max-h-[600px] object-contain" src={`${post?.gifUrl}`} alt="" />
+              </div>
+            )}
+
+            {/* Post Video Content */}
+            {post?.videoId && post.bgColor === '#ffffff' && (
+              <div
+                data-testid="post-video"
+                className="flex items-center justify-center w-full min-h-[300px] max-h-[600px] rounded-lg overflow-hidden mb-3 bg-black"
+              >
+                <video
+                  className="max-w-full max-h-[600px]"
+                  src={`${Utils.getVideo(post?.videoId!, post?.videoVersion!)}`}
+                  controls
+                />
+              </div>
+            )}
+
+            {/* Reactions & Comments Area Overlay Line */}
+            {(post?.reactions?.like! > 0 ||
+              post?.reactions?.love! > 0 ||
+              post?.reactions?.wow! > 0 ||
+              post?.reactions?.sad! > 0 ||
+              post?.reactions?.happy! > 0 ||
+              post?.reactions?.angry! > 0 ||
+              Number(post?.commentsCount) > 0) && <div className="h-[0.5px] bg-[#e4e6eb] w-full my-2"></div>}
+
+            <PostCommentSection post={post} setPosts={setPosts} />
+          </div>
+
+          {selectedPostId === post._id && (
+            <div className="mt-2 border-t border-[#f0f2f5] pt-3">
+              <CommentInputBox post={post} />
+            </div>
+          )}
         </div>
       </div>
     </>

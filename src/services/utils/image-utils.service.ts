@@ -1,5 +1,6 @@
 import { updatePostItem } from '@redux/reducers/post/post.reducer';
 import type { AppDispatch } from '@redux/store';
+import { Utils } from '@services/utils/utils.service';
 
 export class ImageUtils {
   static validateFile(file: File, type: string) {
@@ -25,13 +26,20 @@ export class ImageUtils {
     return fileError;
   }
 
-  static checkFile(file: File, type: string) {
+  static checkFile(file: File, type: string, dispatch?: AppDispatch) {
     if (!ImageUtils.validateFile(file, type)) {
-      return window.alert(`File ${file.name} not accepted`);
+      const msg = `File ${file.name} not accepted`;
+      if (dispatch) Utils.dispatchNotification(msg, 'error', dispatch);
+      else window.alert(msg);
+      return false;
     }
-    if (ImageUtils.checkFileSize(file, type)) {
-      return window.alert(ImageUtils.checkFileSize(file, type));
+    const fileSizeError = ImageUtils.checkFileSize(file, type);
+    if (fileSizeError) {
+      if (dispatch) Utils.dispatchNotification(fileSizeError, 'error', dispatch);
+      else window.alert(fileSizeError);
+      return false;
     }
+    return true;
   }
 
   static async addFileToRedux(
@@ -43,14 +51,18 @@ export class ImageUtils {
   ) {
     const file = event.target.files?.[0];
     if (!file) return;
-    ImageUtils.checkFile(file, type);
+    const ok = ImageUtils.checkFile(file, type);
+    if (!ok) return;
     setSelectedImage(file);
     dispatch(
       updatePostItem({
         image: type === 'image' ? URL.createObjectURL(file) : '',
+        video: type === 'video' ? URL.createObjectURL(file) : '',
         gifUrl: '',
         imgId: '',
         imgVersion: '',
+        videoId: '',
+        videoVersion: '',
         post
       })
     );

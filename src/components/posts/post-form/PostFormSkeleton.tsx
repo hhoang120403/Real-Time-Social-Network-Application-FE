@@ -1,5 +1,4 @@
 import Skeleton from 'react-loading-skeleton';
-import '@components/posts/post-form/PostForm.scss';
 
 const PostFormSkeleton = () => {
   return (

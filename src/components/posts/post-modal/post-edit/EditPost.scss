@@ -3,7 +3,7 @@
   align-self: center;
   justify-self: center;
   position: absolute;
-  width: 500px;
+  width: 600px;
   overflow: hidden;
   box-sizing: border-box;
   z-index: 1;
@@ -276,10 +276,11 @@ hr {
       right: 15px;
       background: var(--white-9);
       color: var(--black-2);
-      height: 25px;
-      width: 25px;
-      text-align: center;
-      line-height: 30px;
+      height: 30px;
+      width: 30px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
       border-radius: 5px;
       margin-right: 5px;
       cursor: pointer;
@@ -356,7 +357,7 @@ hr {
   align-self: center;
   justify-self: center;
   position: absolute;
-  width: 500px;
+  width: 600px;
   overflow: hidden;
   box-sizing: border-box;
   z-index: 1;

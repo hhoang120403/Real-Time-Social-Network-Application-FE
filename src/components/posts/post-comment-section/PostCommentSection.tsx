@@ -4,13 +4,14 @@ import ReactionsAndCommentsDisplay from '../reactions/reactions-and-comments-dis
 
 interface IPostCommentSectionProps {
   post: PostItem;
+  setPosts?: React.Dispatch<React.SetStateAction<any[]>>;
 }
 
-const PostCommentSection = ({ post }: IPostCommentSectionProps) => {
+const PostCommentSection = ({ post, setPosts }: IPostCommentSectionProps) => {
   return (
     <div data-testid="comment-section">
       <ReactionsAndCommentsDisplay post={post} />
-      <CommentArea post={post} />
+      <CommentArea post={post} setPosts={setPosts} />
     </div>
   );
 };

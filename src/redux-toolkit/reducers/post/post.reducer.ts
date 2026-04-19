@@ -12,6 +12,7 @@ export interface PostState {
   gifUrl: string;
   profilePicture: string;
   image: string;
+  video: string;
   userId: string;
   username: string;
   email: string;
@@ -20,6 +21,8 @@ export interface PostState {
   reactions: ReactionsMap;
   imgVersion: string;
   imgId: string;
+  videoVersion: string;
+  videoId: string;
   createdAt: string;
 }
 

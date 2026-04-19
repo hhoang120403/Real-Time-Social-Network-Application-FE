@@ -3,13 +3,16 @@ import type { Reaction, ReactionType } from '@app-types/reaction';
 import type { FormattedReaction } from '@app-types/reactions';
 import type { NotificationType } from '@app-types/toast';
 import type { IUser } from '@app-types/user';
+import { clearChatState } from '@redux/reducers/chat/chat.reducer';
 import { addNotification, clearNotification } from '@redux/reducers/notifications/notification.reducer';
 import { addUser, clearUser } from '@redux/reducers/user/user.reducer';
 import type { AppDispatch } from '@redux/store';
 import type { ISettingsDropdownItem } from '@root/types/settings';
+import { isAuthTransitionInProgress } from '@services/axios';
 import { avatarColors } from '@services/utils/static.data';
 import { findIndex, floor, random, some } from 'lodash';
 import millify from 'millify';
+import { socketService } from '@services/socket/socket.service';
 
 interface ClearStoreParams {
   dispatch: AppDispatch;
@@ -58,10 +61,12 @@ export class Utils {
 
   static clearStore({ dispatch, deleteStorageUsername, deleteSessionPageReload, setLoggedIn }: ClearStoreParams) {
     dispatch(clearUser());
+    dispatch(clearChatState());
     dispatch(clearNotification());
     deleteStorageUsername();
     deleteSessionPageReload();
     setLoggedIn(false);
+    socketService?.socket?.disconnect();
   }
 
   static dispatchNotification(message: string, type: NotificationType, dispatch: AppDispatch) {
@@ -94,13 +99,20 @@ export class Utils {
       }
     ];
   }
-
   static appImageUrl(version: string, id: string) {
     if (typeof version === 'string' && typeof id === 'string') {
       version = version.replace(/['"]+/g, '');
       id = id.replace(/['"]+/g, '');
     }
     return `https://res.cloudinary.com/${import.meta.env.VITE_CLOUD_NAME}/image/upload/v${version}/${id}`;
+  }
+
+  static appVideoUrl(version: string, id: string) {
+    if (typeof version === 'string' && typeof id === 'string') {
+      version = version.replace(/['"]+/g, '');
+      id = id.replace(/['"]+/g, '');
+    }
+    return `https://res.cloudinary.com/${import.meta.env.VITE_CLOUD_NAME}/video/upload/v${version}/${id}`;
   }
 
   static generateString(length: number) {
@@ -121,8 +133,21 @@ export class Utils {
     return some(userFollowers, (user) => user._id === userId);
   }
 
-  static checkIfUserIsOnline(username: string, onlineUsers: string[]) {
-    return some(onlineUsers, (user) => user === username?.toLowerCase());
+  static checkIfUserIsOnline(username?: string, onlineUsers: any[] = [], userId?: string) {
+    const normalizedUsername = username?.toLowerCase();
+    const normalizedUserId = userId?.toLowerCase();
+
+    return some(onlineUsers, (user) => {
+      if (typeof user === 'string') {
+        const normalizedUser = user.toLowerCase();
+        return normalizedUser === normalizedUsername || normalizedUser === normalizedUserId;
+      }
+
+      const onlineUsername = user?.username || user?.userName || user?.name;
+      const onlineUserId = user?._id || user?.userId || user?.id;
+
+      return onlineUsername?.toLowerCase() === normalizedUsername || onlineUserId?.toLowerCase() === normalizedUserId;
+    });
   }
 
   static firstLetterUpperCase(word: string) {
@@ -132,10 +157,11 @@ export class Utils {
 
   static formattedReactions(reactions: Reaction) {
     const postReactions: FormattedReaction[] = [];
+    if (!reactions) return postReactions;
     for (const [key, value] of Object.entries(reactions)) {
       if (value > 0) {
         const reationObject = {
-          type: key as ReactionType,
+          type: key.toLowerCase() as ReactionType,
           value
         };
         postReactions.push(reationObject);
@@ -153,11 +179,30 @@ export class Utils {
     return imageId && imageVersion ? this.appImageUrl(imageVersion, imageId) : '';
   }
 
+  static getVideo(videoId: string, videoVersion: string) {
+    return videoId && videoVersion ? this.appVideoUrl(videoVersion, videoId) : '';
+  }
+
   static removeUserFromList(list: any[], userId: string) {
     const index = findIndex(list, (id) => id === userId);
     if (index > -1) {
       list.splice(index, 1);
     }
     return list;
+  }
+
+  static checkUrl(url: string, word: string) {
+    return url.includes(word);
+  }
+
+  static renameFile(element: File) {
+    const fileName = element.name.split('.').slice(0, -1).join('.');
+    const blob = element.slice(0, element.size, 'image/png');
+    const newFile = new File([blob], `${fileName}.png`, { type: 'image/png' });
+    return newFile;
+  }
+
+  static shouldSkipErrorNotification(error: any) {
+    return error?.response?.status === 401 && isAuthTransitionInProgress();
   }
 }

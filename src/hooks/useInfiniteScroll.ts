@@ -1,33 +1,32 @@
-import { useCallback, useEffect, type RefObject } from 'react';
+import { useEffect, type RefObject } from 'react';
 
 const useInfiniteScroll = (
-  bodyRef: RefObject<HTMLDivElement | null>,
   bottomLineRef: RefObject<HTMLDivElement | null>,
   callback: () => void
 ) => {
-  const handleScroll = useCallback(() => {
-    const bodyElement = bodyRef.current;
-    const bottomElement = bottomLineRef.current;
-    if (!bodyElement || !bottomElement) return;
-
-    const containerHeight = bodyElement.getBoundingClientRect().height;
-    const { top: bottomLineTop } = bottomElement.getBoundingClientRect();
-
-    if (bottomLineTop <= containerHeight) {
-      callback();
-    }
-  }, [bodyRef, bottomLineRef, callback]);
-
   useEffect(() => {
-    const bodyElement = bodyRef.current;
-    if (!bodyElement) return;
+    const bottomElement = bottomLineRef.current;
+    if (!bottomElement) return;
 
-    bodyElement.addEventListener('scroll', handleScroll, true);
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting) {
+          callback();
+        }
+      },
+      {
+        root: null, // Use viewport
+        rootMargin: '100px', // Start loading before it's fully visible
+        threshold: 0.1
+      }
+    );
+
+    observer.observe(bottomElement);
 
     return () => {
-      bodyElement.removeEventListener('scroll', handleScroll, true);
+      observer.unobserve(bottomElement);
     };
-  }, [handleScroll, bodyRef]);
+  }, [bottomLineRef, callback]);
 };
 
 export default useInfiniteScroll;

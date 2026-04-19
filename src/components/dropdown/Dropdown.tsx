@@ -8,7 +8,7 @@ interface IDropdownProps {
   data: any[];
   notificationCount: number;
   title: string;
-  style: React.CSSProperties;
+  style?: React.CSSProperties;
   height: number;
   onMarkAsRead: (item: any) => void;
   onDeleteNotification: (id: string) => void;
@@ -20,7 +20,7 @@ const Dropdown = ({
   data,
   notificationCount,
   title,
-  style,
+  style = {},
   height,
   onMarkAsRead,
   onDeleteNotification,

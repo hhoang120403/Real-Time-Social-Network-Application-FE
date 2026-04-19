@@ -1,13 +1,46 @@
-.dashboard {
-  display: flex;
+/* 
+   Social.scss - Styles have been migrated to Tailwind CSS in Social.tsx 
+   for better responsiveness and modernized aesthetics.
+*/
 
-  &-sidebar {
-    flex: 2;
-    max-width: 15%;
+.custom-scrollbar {
+  &::-webkit-scrollbar {
+    width: 6px;
   }
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  &::-webkit-scrollbar-thumb {
+    background: transparent;
+    border-radius: 10px;
+    transition: background 0.3s ease;
+  }
+  
+  &:hover {
+    &::-webkit-scrollbar-thumb {
+      background: rgba(0, 0, 0, 0.15);
+      border: 1px solid transparent;
+      background-clip: padding-box;
+    }
+    
+    &::-webkit-scrollbar-thumb:hover {
+      background: rgba(0, 0, 0, 0.25);
+    }
+  }
+}
 
-  &-content {
-    flex: 6;
-    height: 100vh;
-  }
+// Global scrollbar for the overall page if needed
+body::-webkit-scrollbar {
+  width: 10px;
+}
+body::-webkit-scrollbar-track {
+  background: #f8f9fa;
+}
+body::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 10px;
+  border: 2px solid #f8f9fa;
+}
+body::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
 }

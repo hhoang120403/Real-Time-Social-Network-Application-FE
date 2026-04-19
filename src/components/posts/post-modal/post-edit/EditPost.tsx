@@ -5,7 +5,7 @@ import { type AppDispatch, type RootState } from '@redux/store';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import ModalBoxContent from '@components/posts/post-modal/modal-box-content/ModalBoxContent';
 import { FaArrowLeft, FaTimes } from 'react-icons/fa';
-import { bgColors, feelingsList } from '@services/utils/static.data';
+import { bgColors, feelingsList, privacyList } from '@services/utils/static.data';
 import ModalBoxSelection from '@components/posts/post-modal/modal-box-content/ModalBoxSelection';
 import Button from '@components/button/Button';
 import { PostUtils } from '@services/utils/post-utils.service';
@@ -16,6 +16,8 @@ import type { PostData } from '@app-types/post';
 import Spinner from '@components/spinner/Spinner';
 import { find } from 'lodash';
 import { Utils } from '@services/utils/utils.service';
+import SelectDropdown from '@components/select-dropdown/SelectDropdown';
+import useDetectOutsideClick from '@hooks/useDetectOutsideClick';
 
 const EditPost = () => {
   const { profile } = useSelector((state: RootState) => state.user);
@@ -42,6 +44,8 @@ const EditPost = () => {
   const counterRef = useRef<HTMLSpanElement>(null);
   const inputRef = useRef<HTMLDivElement | null>(null);
   const imageInputRef = useRef<HTMLDivElement | null>(null);
+  const privacyRef = useRef<HTMLDivElement>(null);
+  const [togglePrivacy, setTogglePrivacy] = useDetectOutsideClick(privacyRef, false);
   const dispatch = useDispatch<AppDispatch>();
 
   const maxNumberOfCharacters = 255;
@@ -231,7 +235,21 @@ const EditPost = () => {
               </button>
             </div>
             <hr />
-            <ModalBoxContent />
+            <ModalBoxContent togglePrivacy={togglePrivacy} setTogglePrivacy={setTogglePrivacy} />
+
+            {togglePrivacy && (
+              <div
+                ref={privacyRef}
+                className="absolute top-[135px] left-[70px] z-999 animate-in fade-in zoom-in-95 duration-200"
+              >
+                <SelectDropdown
+                  isActive={togglePrivacy}
+                  items={privacyList}
+                  setSelectedItem={() => {}}
+                  toggleDropdown={setTogglePrivacy}
+                />
+              </div>
+            )}
 
             {!postImage && (
               <>

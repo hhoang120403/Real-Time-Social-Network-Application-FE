@@ -3,7 +3,7 @@ import './CommentArea.scss';
 import type { PostItem } from '@app-types/post';
 import Reactions from '../reactions/Reaction';
 import { useCallback, useEffect, useState } from 'react';
-import { cloneDeep, filter, find } from 'lodash';
+import { cloneDeep, filter, find, findIndex } from 'lodash';
 import { Utils } from '@services/utils/utils.service';
 import { reactionsMap } from '@services/utils/static.data';
 import { useDispatch, useSelector } from 'react-redux';
@@ -18,9 +18,10 @@ import { clearPost, updatePostItem } from '@redux/reducers/post/post.reducer';
 
 interface ICommentAreaProps {
   post: PostItem;
+  setPosts?: React.Dispatch<React.SetStateAction<any[]>>;
 }
 
-const CommentArea = ({ post }: ICommentAreaProps) => {
+const CommentArea = ({ post, setPosts }: ICommentAreaProps) => {
   const { profile } = useSelector((state: RootState) => state.user);
   let { reactions } = useSelector((state: RootState) => state.userPostReaction);
   const [selectedReaction, setSelectedReaction] = useState<string>('like');
@@ -28,13 +29,16 @@ const CommentArea = ({ post }: ICommentAreaProps) => {
   const [setSelectedPostId] = useLocalStorage('selectedPostId', 'set');
   const dispatch = useDispatch<AppDispatch>();
 
-  const [showReactions, setShowReactions] = useState<boolean>(true);
+  const [showReactions, setShowReactions] = useState<boolean>(false);
 
   const selectedUserReaction = useCallback(
     (postReactions: any[]) => {
       const userReaction = find(postReactions, (reaction) => reaction.postId === post._id);
-      const result = userReaction ? Utils.firstLetterUpperCase(userReaction.type) : 'Like';
-      setSelectedReaction(result);
+      if (userReaction) {
+        setSelectedReaction(userReaction.type);
+      } else {
+        setSelectedReaction('');
+      }
     },
     [post]
   );
@@ -104,6 +108,17 @@ const CommentArea = ({ post }: ICommentAreaProps) => {
           await postService.addReaction(reactionData);
         }
       }
+
+      if (setPosts) {
+        setPosts((prevPosts) => {
+          const posts = cloneDeep(prevPosts);
+          const index = findIndex(posts, (p) => String(p._id) === String(post._id));
+          if (index > -1) {
+            posts.splice(index, 1, post);
+          }
+          return posts;
+        });
+      }
     } catch (error: any) {
       Utils.dispatchNotification(error.response?.data?.message, 'error', dispatch);
     }
@@ -116,13 +131,13 @@ const CommentArea = ({ post }: ICommentAreaProps) => {
   ) => {
     post = cloneDeep(post);
     if (!hasResponse) {
-      post.reactions[newReaction] += 1;
+      post.reactions[newReaction] = (post.reactions[newReaction] || 0) + 1;
     } else {
       if (post.reactions[previousReaction] > 0) {
         post.reactions[previousReaction] -= 1;
       }
       if (previousReaction !== newReaction) {
-        post.reactions[newReaction] += 1;
+        post.reactions[newReaction] = (post.reactions[newReaction] || 0) + 1;
       }
     }
     return post;
@@ -171,28 +186,57 @@ const CommentArea = ({ post }: ICommentAreaProps) => {
   }, [selectedUserReaction, reactions]);
 
   return (
-    <div className="comment-area" data-testid="comment-area">
-      <div className="like-icon reactions" onMouseEnter={() => setShowReactions(true)}>
-        <div className="likes-block" onClick={() => addReactionPost('like')}>
-          <div className={`likes-block-icons reaction-icon ${selectedReaction.toLowerCase()}`}>
-            <div className={`reaction-display ${selectedReaction.toLowerCase()}`} data-testid="selected-reaction">
-              <img
-                className="reaction-img"
-                src={reactionsMap[selectedReaction.toLowerCase() as keyof typeof reactionsMap]}
-                alt=""
-              />
-              <span>{selectedReaction}</span>
-            </div>
+    <div
+      className="flex items-center justify-between border-t border-[#f0f2f5] w-full px-2 py-1 box-border min-h-[44px]"
+      data-testid="comment-area"
+    >
+      <div
+        className="flex-1 flex items-center justify-center py-[10px] rounded-lg cursor-pointer transition-all duration-200 hover:bg-[#f2f3f5] relative group"
+        onMouseEnter={() => setShowReactions(true)}
+      >
+        <div
+          className="flex items-center justify-center gap-[10px] w-full h-full"
+          onClick={() => addReactionPost('like')}
+        >
+          <div className="flex items-center gap-[6px]">
+            <img
+              className="w-[18px] h-[18px] object-contain mt-[2px]"
+              src={reactionsMap[(selectedReaction || 'like') as keyof typeof reactionsMap]}
+              alt=""
+            />
+            <span
+              className={`text-[15px] font-semibold`}
+              style={{
+                color:
+                  selectedReaction === 'love'
+                    ? 'var(--red-1)'
+                    : selectedReaction !== '' && selectedReaction !== 'like'
+                      ? 'var(--yellow-1)'
+                      : selectedReaction === 'like'
+                        ? 'var(--primary-1)'
+                        : '#65676b'
+              }}
+            >
+              {Utils.firstLetterUpperCase(selectedReaction || 'like')}
+            </span>
           </div>
         </div>
-        <div className="reactions-container app-reactions">
+
+        {/* Reactions Popup */}
+        <div
+          className="absolute bottom-full left-0 pb-[15px] z-100 hidden group-hover:block"
+          onClick={(e) => e.stopPropagation()}
+        >
           {showReactions && <Reactions handleClick={addReactionPost} />}
         </div>
       </div>
-      <div className="comment-block" onClick={toggleCommentInput}>
-        <span className="comments-text">
-          <FaRegCommentAlt className="comment-alt" /> <span>Comments</span>
-        </span>
+
+      <div
+        className="flex-1 flex items-center justify-center py-[10px] rounded-lg cursor-pointer transition-all duration-200 hover:bg-[#f2f3f5] text-[#65676b] font-semibold gap-[10px]"
+        onClick={toggleCommentInput}
+      >
+        <FaRegCommentAlt className="text-[16px]" />
+        <span className="text-[15px]">Comments</span>
       </div>
     </div>
   );
