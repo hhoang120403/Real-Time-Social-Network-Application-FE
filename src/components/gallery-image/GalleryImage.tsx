@@ -4,12 +4,12 @@ import { FaTrash } from 'react-icons/fa';
 import '@components/gallery-image/GalleryImage.scss';
 
 interface IGalleryImageProps {
-  post: any;
+  post?: any;
   showCaption: boolean;
   showDelete: boolean;
   imgSrc: string;
   onClick: () => void;
-  onRemoveImage?: () => void;
+  onRemoveImage?: (event: any) => void;
 }
 
 const GalleryImage = ({ post, showCaption, showDelete, imgSrc, onClick, onRemoveImage }: IGalleryImageProps) => {

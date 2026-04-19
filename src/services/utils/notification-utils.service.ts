@@ -5,62 +5,101 @@ import { socketService } from '@services/socket/socket.service';
 import { cloneDeep, find, findIndex, remove, sumBy } from 'lodash';
 import { Utils } from './utils.service';
 import { timeAgo } from './timeago.utils';
+import { updateChatList } from '@redux/reducers/chat/chat.reducer';
 
 export class NotificationUtils {
   static socketIONotification(
     profile: IUser,
-    notifications: NotificationItem[],
     setNotifications: (notifications: any) => void,
     type: string,
     setNotificationsCount?: (count: number) => void
   ) {
-    socketService?.socket?.on('insert notification', (data: NotificationItem[], userToData: { userTo: string }) => {
+    const onInsert = (data: NotificationItem[], userToData: { userTo: string }) => {
       if (profile?._id === userToData.userTo) {
-        notifications = [...data];
+        setNotifications((prev: NotificationItem[]) => {
+          const newNotifications = [...data];
+          if (type === 'notificationPage') {
+            return newNotifications;
+          } else {
+            const mappedNotifications = NotificationUtils.mapNotificationDropdownItems(
+              newNotifications,
+              setNotificationsCount
+            );
+            return mappedNotifications;
+          }
+        });
+      }
+    };
+
+    const onUpdate = (notificationId: string) => {
+      setNotifications((prev: NotificationItem[]) => {
+        const clonedNotifications = cloneDeep(prev);
+        const notificationData = find(clonedNotifications, (notification) => notification._id === notificationId);
+        if (notificationData) {
+          const index = findIndex(clonedNotifications, (notification) => notification._id === notificationId);
+          notificationData.read = true;
+          clonedNotifications.splice(index, 1, notificationData);
+          if (type === 'notificationPage') {
+            return clonedNotifications;
+          } else {
+            const mappedNotifications = NotificationUtils.mapNotificationDropdownItems(
+              clonedNotifications,
+              setNotificationsCount
+            );
+            return mappedNotifications;
+          }
+        }
+        return prev;
+      });
+    };
+
+    const onDelete = (notificationId: string) => {
+      setNotifications((prev: NotificationItem[]) => {
+        const clonedNotifications = cloneDeep(prev);
+        remove(clonedNotifications, { _id: notificationId });
         if (type === 'notificationPage') {
-          setNotifications(notifications);
+          return clonedNotifications;
         } else {
           const mappedNotifications = NotificationUtils.mapNotificationDropdownItems(
-            notifications,
+            clonedNotifications,
             setNotificationsCount
           );
-          setNotifications(mappedNotifications);
+          return mappedNotifications;
         }
-      }
-    });
+      });
+    };
 
-    socketService?.socket?.on('update notification', (notificationId: string) => {
-      notifications = cloneDeep(notifications);
-      const notificationData = find(notifications, (notification) => notification._id === notificationId);
-      if (notificationData) {
-        const index = findIndex(notifications, (notification) => notification._id === notificationId);
-        notificationData.read = true;
-        notifications.splice(index, 1, notificationData);
-        if (type === 'notificationPage') {
-          setNotifications(notifications);
-        } else {
-          const mappedNotifications = NotificationUtils.mapNotificationDropdownItems(
-            notifications,
-            setNotificationsCount
-          );
-          setNotifications(mappedNotifications);
-        }
+    const onUpdateAll = (userId: string) => {
+      if (profile?._id === userId) {
+        setNotifications((prev: NotificationItem[]) => {
+          const clonedNotifications = cloneDeep(prev);
+          for (const notification of clonedNotifications) {
+            notification.read = true;
+          }
+          if (type === 'notificationPage') {
+            return clonedNotifications;
+          } else {
+            const mappedNotifications = NotificationUtils.mapNotificationDropdownItems(
+              clonedNotifications,
+              setNotificationsCount
+            );
+            return mappedNotifications;
+          }
+        });
       }
-    });
+    };
 
-    socketService?.socket?.on('delete notification', (notificationId: string) => {
-      notifications = cloneDeep(notifications);
-      remove(notifications, { _id: notificationId });
-      if (type === 'notificationPage') {
-        setNotifications(notifications);
-      } else {
-        const mappedNotifications = NotificationUtils.mapNotificationDropdownItems(
-          notifications,
-          setNotificationsCount
-        );
-        setNotifications(mappedNotifications);
-      }
-    });
+    socketService?.socket?.on('insert notification', onInsert);
+    socketService?.socket?.on('update notification', onUpdate);
+    socketService?.socket?.on('delete notification', onDelete);
+    socketService?.socket?.on('update all notifications', onUpdateAll);
+
+    return () => {
+      socketService?.socket?.off('insert notification', onInsert);
+      socketService?.socket?.off('update notification', onUpdate);
+      socketService?.socket?.off('delete notification', onDelete);
+      socketService?.socket?.off('update all notifications', onUpdateAll);
+    };
   }
 
   static mapNotificationDropdownItems(notificationData: any[], setNotificationsCount?: (count: number) => void) {
@@ -99,7 +138,8 @@ export class NotificationUtils {
   static async markAsRead(
     notificationId: string,
     notification: any,
-    setNotificationDialog: (notification: any) => void
+    setNotificationDialog: (notification: any) => void,
+    setNotifications?: any
   ) {
     if (notification.notificationType !== 'follows') {
       const notificationDialog = {
@@ -116,53 +156,44 @@ export class NotificationUtils {
       };
       setNotificationDialog(notificationDialog);
     }
+
+    if (setNotifications) {
+      setNotifications((prev: any[]) => {
+        const clonedNotifications = cloneDeep(prev);
+        const index = findIndex(clonedNotifications, (notif) => notif._id === notificationId);
+        if (index !== -1) {
+          clonedNotifications[index].read = true;
+        }
+        return clonedNotifications;
+      });
+    }
+
     await notificationService.markNotificationAsRead(notificationId);
   }
 
-  static socketIOMessageNotification(
-    profile,
-    messageNotifications,
-    setMessageNotifications,
-    setMessageCount,
-    dispatch,
-    location
-  ) {
-    socketService?.socket?.on('chat list', (data) => {
-      messageNotifications = cloneDeep(messageNotifications);
-      if (data?.receiverUsername === profile?.username) {
-        const notificationData = {
-          senderId: data.senderId,
-          senderUsername: data.senderUsername,
-          senderAvatarColor: data.senderAvatarColor,
-          senderProfilePicture: data.senderProfilePicture,
-          receiverId: data.receiverId,
-          receiverUsername: data.receiverUsername,
-          receiverAvatarColor: data.receiverAvatarColor,
-          receiverProfilePicture: data.receiverProfilePicture,
-          messageId: data._id,
-          conversationId: data.conversationId,
-          body: data.body,
-          isRead: data.isRead
-        };
-        const messageIndex = findIndex(
-          messageNotifications,
-          (notification: any) => notification.conversationId === data.conversationId
-        );
-        if (messageIndex > -1) {
-          remove(messageNotifications, (notification: any) => notification.conversationId === data.conversationId);
-          messageNotifications = [notificationData, ...messageNotifications];
-        } else {
-          messageNotifications = [notificationData, ...messageNotifications];
-        }
-        const count = sumBy(messageNotifications, (notification: any) => {
-          return !notification.isRead ? 1 : 0;
-        });
-        if (!Utils.checkUrl(location.pathname, 'chat')) {
+  static socketIOMessageNotification(profile: any, dispatch: any, location: any, getConversationList: any) {
+    const onChatList = (data: any) => {
+      const isReceiver = data?.receiverUsername?.toLowerCase() === profile?.username?.toLowerCase();
+      const isSender = data?.senderUsername?.toLowerCase() === profile?.username?.toLowerCase();
+
+      if (isReceiver || isSender) {
+        dispatch(updateChatList(data));
+        if (
+          isReceiver &&
+          profile?.notifications?.messages &&
+          !data?.isEdited &&
+          !Utils.checkUrl(location.pathname, 'chat')
+        ) {
           Utils.dispatchNotification('You have a new message', 'success', dispatch);
         }
-        setMessageCount(count);
-        setMessageNotifications(messageNotifications);
       }
-    });
+    };
+
+    socketService?.socket?.off('chat list', onChatList);
+    socketService?.socket?.on('chat list', onChatList);
+
+    return () => {
+      socketService?.socket?.off('chat list', onChatList);
+    };
   }
 }

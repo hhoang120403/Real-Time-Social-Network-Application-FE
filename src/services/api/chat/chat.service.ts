@@ -21,6 +21,11 @@ class ChatService {
     return response;
   }
 
+  async deleteConversationForMe(receiverId: string) {
+    const response = await axiosInstance.delete(`/chat/message/conversation/${receiverId}`);
+    return response;
+  }
+
   async markMessagesAsRead(senderId: string, receiverId: string) {
     const response = await axiosInstance.put(`/chat/message/mark-as-read`, { senderId, receiverId });
     return response;
@@ -40,6 +45,11 @@ class ChatService {
     const response = await axiosInstance.delete(
       `/chat/message/mark-as-deleted/${messageId}/${senderId}/${receiverId}/${type}`
     );
+    return response;
+  }
+
+  async updateChatMessage(body: any) {
+    const response = await axiosInstance.put('/chat/message/update', body);
     return response;
   }
 }

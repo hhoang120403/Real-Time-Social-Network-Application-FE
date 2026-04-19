@@ -33,6 +33,8 @@ const notificationSlice = createSlice({
   reducers: {
     addNotification: (state, action: PayloadAction<NotificationPayload>) => {
       const { message, type } = action.payload;
+      // Don't add a toast if there is no message to display
+      if (!message) return state;
       const toast = toastIcons[type];
 
       const toastItem = {

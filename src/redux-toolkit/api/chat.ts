@@ -9,7 +9,10 @@ const getConversationList = createAsyncThunk(
       const response = await chatService.getConversationList();
       return response.data;
     } catch (error: any) {
-      Utils.dispatchNotification(error.response?.data?.message, 'error', dispatch);
+      if (!Utils.shouldSkipErrorNotification(error)) {
+        Utils.dispatchNotification(error.response?.data?.message, 'error', dispatch);
+      }
+      throw error;
     }
   }
 );

@@ -4,10 +4,9 @@ import '@components/posts/reactions/reactions-and-comments-display/ReactionsAndC
 import { useDispatch, useSelector } from 'react-redux';
 import type { AppDispatch, RootState } from '@redux/store';
 import { Utils } from '@services/utils/utils.service';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { postService } from '@services/api/post/post.service';
 import { reactionsMap } from '@services/utils/static.data';
-import type { FormattedReaction } from '@app-types/reactions';
 import { updatePostItem } from '@redux/reducers/post/post.reducer';
 import { toggleCommentsModal, toggleReactionsModal } from '@redux/reducers/modal/modal.reducer';
 
@@ -18,7 +17,6 @@ interface IReactionsAndCommentsDisplayProps {
 const ReactionsAndCommentsDisplay = ({ post }: IReactionsAndCommentsDisplayProps) => {
   const { reactionsModalIsOpen, commentsModalIsOpen } = useSelector((state: RootState) => state.modal);
   const [postReactions, setPostReactions] = useState<any[]>([]);
-  const [reactions, setReactions] = useState<FormattedReaction[]>([]);
   const [postCommentsNames, setPostCommentsNames] = useState<any[]>([]);
   const dispatch = useDispatch<AppDispatch>();
 
@@ -42,9 +40,10 @@ const ReactionsAndCommentsDisplay = ({ post }: IReactionsAndCommentsDisplayProps
 
   const sumAllReactions = (reactions: any[]) => {
     if (reactions?.length) {
-      const result = reactions.map((item) => item.value).reduce((total, value) => total + value, 0);
-      return Utils.shortenLargeNumber(result);
+      const result = reactions.reduce((total, item) => total + (item.value || 0), 0);
+      return result > 0 ? Utils.shortenLargeNumber(result) : null;
     }
+    return null;
   };
 
   const openReactionsComponent = () => {
@@ -57,14 +56,13 @@ const ReactionsAndCommentsDisplay = ({ post }: IReactionsAndCommentsDisplayProps
     dispatch(toggleCommentsModal(!commentsModalIsOpen));
   };
 
-  useEffect(() => {
-    setReactions(Utils.formattedReactions(post?.reactions));
-  }, [post]);
+  const reactions = Utils.formattedReactions(post?.reactions);
+  const reactionCount = sumAllReactions(reactions);
 
   return (
     <div className="reactions-display">
       <div className="reaction">
-        <div className="likes-block">
+        <div className="likes-block" onClick={() => openReactionsComponent()}>
           <div className="likes-block-icons reactions-icon-display">
             {reactions.length > 0 &&
               reactions.map((reaction) => (
@@ -100,27 +98,28 @@ const ReactionsAndCommentsDisplay = ({ post }: IReactionsAndCommentsDisplayProps
                 </div>
               ))}
           </div>
-          <span
-            data-testid="reactions-count"
-            className="tooltip-container reactions-count"
-            onMouseEnter={getPostReactions}
-            onClick={() => openReactionsComponent()}
-          >
-            {sumAllReactions(reactions)}
-            <div className="tooltip-container-text tooltip-container-likes-bottom" data-testid="tooltip-container">
-              <div className="likes-block-icons-list">
-                {postReactions.length === 0 && <FaSpinner className="circle-notch" />}
-                {postReactions.length > 0 && (
-                  <>
-                    {postReactions.slice(0, 19).map((postReaction) => (
-                      <span key={Utils.generateString(10)}>{postReaction?.username}</span>
-                    ))}
-                    {postReactions.length > 20 && <span>and {postReactions.length - 20} others...</span>}
-                  </>
-                )}
+          {reactionCount && (
+            <span
+              data-testid="reactions-count"
+              className="tooltip-container reactions-count"
+              onMouseEnter={getPostReactions}
+            >
+              {reactionCount}
+              <div className="tooltip-container-text tooltip-container-likes-bottom" data-testid="tooltip-container">
+                <div className="likes-block-icons-list">
+                  {postReactions.length === 0 && <FaSpinner className="circle-notch" />}
+                  {postReactions.length > 0 && (
+                    <>
+                      {postReactions.slice(0, 19).map((postReaction) => (
+                        <span key={Utils.generateString(10)}>{postReaction?.username}</span>
+                      ))}
+                      {postReactions.length > 20 && <span>and {postReactions.length - 20} others...</span>}
+                    </>
+                  )}
+                </div>
               </div>
-            </div>
-          </span>
+            </span>
+          )}
         </div>
       </div>
       <div className="comment tooltip-container" data-testid="comment-container" onClick={openCommentsComponent}>

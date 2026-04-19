@@ -1,12 +1,13 @@
 import type { IUser } from '@app-types/user';
 import { getConversationList } from '@redux/api/chat';
 import { createSlice } from '@reduxjs/toolkit';
-import { orderBy } from 'lodash';
+import { orderBy, findIndex } from 'lodash';
 
 const initialState = {
   chatList: [] as any[],
   selectedChatUser: null as IUser | null,
-  isLoading: false
+  isLoading: false,
+  onlineUsers: [] as string[]
 };
 
 const chatSlice = createSlice({
@@ -22,6 +23,31 @@ const chatSlice = createSlice({
       const { isLoading, user } = action.payload;
       state.selectedChatUser = user;
       state.isLoading = isLoading;
+    },
+    setOnlineUsers: (state, action) => {
+      state.onlineUsers = [...action.payload];
+    },
+    updateChatList: (state, action) => {
+      const data = action.payload;
+      const index = findIndex(state.chatList, (chat) => {
+        return (
+          chat.conversationId === data.conversationId ||
+          (chat.receiverUsername === data.receiverUsername && chat.senderUsername === data.senderUsername) ||
+          (chat.receiverUsername === data.senderUsername && chat.senderUsername === data.receiverUsername)
+        );
+      });
+      if (index !== -1) {
+        state.chatList.splice(index, 1);
+        state.chatList = [data, ...state.chatList];
+      } else {
+        state.chatList = [data, ...state.chatList];
+      }
+    },
+    clearChatState: (state) => {
+      state.chatList = [];
+      state.selectedChatUser = null;
+      state.isLoading = false;
+      state.onlineUsers = [];
     }
   },
   extraReducers: (builder) => {
@@ -29,7 +55,7 @@ const chatSlice = createSlice({
       state.isLoading = true;
     });
     builder.addCase(getConversationList.fulfilled, (state, action) => {
-      const { list } = action.payload;
+      const { list = [] } = action.payload ?? {};
       state.isLoading = false;
       const sortedList = orderBy(list, ['createdAt'], ['desc']);
       state.chatList = [...sortedList];
@@ -40,5 +66,5 @@ const chatSlice = createSlice({
   }
 });
 
-export const { addToChatList, setSelectedChatUser } = chatSlice.actions;
+export const { addToChatList, setSelectedChatUser, clearChatState, setOnlineUsers, updateChatList } = chatSlice.actions;
 export default chatSlice.reducer;

@@ -12,7 +12,8 @@ const initialState = {
   gifModalIsOpen: false,
   reactionsModalIsOpen: false,
   commentsModalIsOpen: false,
-  deleteDialogIsOpen: false
+  deleteDialogIsOpen: false,
+  deletePostDialogIsOpen: false
 };
 
 const modalSlice = createSlice({
@@ -38,6 +39,7 @@ const modalSlice = createSlice({
       state.openFileDialog = false;
       state.openVideoDialog = false;
       state.deleteDialogIsOpen = false;
+      state.deletePostDialogIsOpen = false;
     },
     addPostFeeling: (state, action) => {
       const { feeling } = action.payload;
@@ -65,6 +67,11 @@ const modalSlice = createSlice({
       const { data, toggle } = action.payload;
       state.deleteDialogIsOpen = toggle;
       state.data = data;
+    },
+    toggleDeletePostDialog: (state, action) => {
+      const { data, toggle } = action.payload;
+      state.deletePostDialogIsOpen = toggle;
+      state.data = data;
     }
   }
 });
@@ -79,6 +86,7 @@ export const {
   toggleGifModal,
   toggleReactionsModal,
   toggleCommentsModal,
-  toggleDeleteDialog
+  toggleDeleteDialog,
+  toggleDeletePostDialog
 } = modalSlice.actions;
 export default modalSlice.reducer;

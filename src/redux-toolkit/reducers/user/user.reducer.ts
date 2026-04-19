@@ -20,7 +20,7 @@ const userSlice = createSlice({
       state.profile = null;
     },
     updateUserProfile: (state, action) => {
-      state.profile = action.payload;
+      state.profile = { ...state.profile, ...action.payload } as IUser;
     }
   }
 });

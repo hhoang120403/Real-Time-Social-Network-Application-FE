@@ -28,38 +28,38 @@ const Streams = () => {
   const [totalPostsCount, setTotalPostsCount] = useState<number>(0);
   const bodyRef = useRef<HTMLDivElement>(null);
   const bottomLineRef = useRef<HTMLDivElement>(null);
-  const appPosts = useRef<any[]>([]);
   const dispatch = useDispatch<AppDispatch>();
   const storedUsername = useLocalStorage('username', 'get');
   const [deleteSelectedPostId] = useLocalStorage('selectedPostId', 'delete');
-
-  useInfiniteScroll(bodyRef, bottomLineRef, fetchPostData);
-  const PAGE_SIZE = 10;
-
-  function fetchPostData() {
-    let pageNum = currentPage;
-    if (currentPage <= Math.round(totalPostsCount / PAGE_SIZE)) {
-      pageNum += 1;
-      setCurrentPage(pageNum);
-      getAllPosts(pageNum);
-    }
-  }
 
   const getAllPosts = async (page = currentPage) => {
     setLoading(true);
     try {
       const response = await postService.getAllPosts(page);
       if (response.data.posts.length > 0) {
-        appPosts.current = [...posts, ...response.data.posts];
-        const allPosts = uniqBy(appPosts.current, '_id');
-        setPosts(allPosts);
+        setPosts((prevPosts) => {
+          const combined = [...prevPosts, ...response.data.posts];
+          return uniqBy(combined, '_id');
+        });
+        if (response.data.totalPosts) {
+          setTotalPostsCount(response.data.totalPosts);
+        }
       }
       setLoading(false);
     } catch (error: any) {
-      Utils.dispatchNotification(error.response.data.message, 'error', dispatch);
+      Utils.dispatchNotification(error.response?.data?.message || 'Error fetching posts', 'error', dispatch);
       setLoading(false);
     }
   };
+
+  const fetchPostData = () => {
+    if (loading || posts.length >= totalPostsCount) return;
+    const pageNum = currentPage + 1;
+    setCurrentPage(pageNum);
+    getAllPosts(pageNum);
+  };
+
+  useInfiniteScroll(bottomLineRef, fetchPostData);
 
   const getReactionsByUsername = async () => {
     try {
@@ -80,7 +80,6 @@ const Streams = () => {
   };
 
   useEffectOnce(() => {
-    // getAllPosts();
     getUserFollowing();
     getReactionsByUsername();
     deleteSelectedPostId();
@@ -89,24 +88,34 @@ const Streams = () => {
   });
 
   useEffect(() => {
-    setLoading(allPosts?.isLoading);
-    setPosts(allPosts?.posts);
-    setTotalPostsCount(allPosts?.totalPostsCount);
-  }, [allPosts]);
+    if (allPosts?.posts) {
+      setPosts(allPosts.posts);
+      setTotalPostsCount(allPosts.totalPostsCount);
+    }
+  }, [allPosts.posts, allPosts.totalPostsCount]);
 
   useEffect(() => {
-    PostUtils.socketIOPost(posts, setPosts);
-  }, [posts]);
+    setLoading(allPosts.isLoading);
+  }, [allPosts.isLoading]);
+
+  useEffect(() => {
+    PostUtils.socketIOPost(setPosts);
+  }, [setPosts]);
 
   return (
-    <div className="streams">
-      <div className="streams-content">
-        <div className="streams-post" ref={bodyRef}>
-          <PostForm />
-          <Posts allPosts={posts} userFollowing={following} postsLoading={loading} />
-          <div style={{ marginBottom: '50px', height: '50px' }} ref={bottomLineRef}></div>
+    <div className="w-full max-w-[1280px] mx-auto px-0 sm:px-4">
+      <div className="flex flex-col lg:flex-row gap-8 justify-center items-start">
+        {/* Main Feed Section */}
+        <div className="flex-1 max-w-[680px] w-full min-w-0" ref={bodyRef}>
+          <div className="flex flex-col">
+            <PostForm />
+            <Posts allPosts={posts} userFollowing={following} postsLoading={loading} />
+            <div className="h-20" ref={bottomLineRef}></div>
+          </div>
         </div>
-        <div className="streams-suggestions">
+
+        {/* Suggestions Sidebar */}
+        <div className="hidden lg:block w-[350px] shrink-0 sticky h-fit">
           <Suggestions />
         </div>
       </div>

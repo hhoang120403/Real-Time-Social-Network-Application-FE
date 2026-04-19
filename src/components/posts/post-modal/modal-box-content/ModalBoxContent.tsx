@@ -1,25 +1,26 @@
 import Avatar from '@components/avatar/Avatar';
 import { useSelector } from 'react-redux';
 import type { RootState } from '@redux/store';
-import SelectDropdown from '@components/select-dropdown/SelectDropdown';
-import { useCallback, useEffect, useRef, useState } from 'react';
-import { FaGlobe } from 'react-icons/fa';
+import { useCallback, useEffect, useState } from 'react';
+import { FaGlobe, FaCaretDown } from 'react-icons/fa';
 import { privacyList } from '@services/utils/static.data';
-import useDetectOutsideClick from '@hooks/useDetectOutsideClick';
 import { find } from 'lodash';
 import type { Privacy } from '@app-types/post';
 
-const ModalBoxContent = () => {
+interface ModalBoxContentProps {
+  setTogglePrivacy: (active: boolean) => void;
+  togglePrivacy: boolean;
+}
+
+const ModalBoxContent = ({ setTogglePrivacy, togglePrivacy }: ModalBoxContentProps) => {
   const { profile } = useSelector((state: RootState) => state.user);
   const { privacy } = useSelector((state: RootState) => state.post);
   const { feeling } = useSelector((state: RootState) => state.modal);
-  const privacyRef = useRef<HTMLDivElement>(null);
   const [selectedItem, setSelectedItem] = useState<Privacy>({
     topText: 'Public',
     subText: 'Anyone on Chatty',
-    icon: <FaGlobe className="globe-icon globe" />
+    icon: <FaGlobe className="text-[12px]" />
   });
-  const [togglePrivacy, setTogglePrivacy] = useDetectOutsideClick(privacyRef, false);
 
   const displayPostPrivacy = useCallback(() => {
     if (privacy) {
@@ -35,35 +36,38 @@ const ModalBoxContent = () => {
   }, [displayPostPrivacy]);
 
   return (
-    <div className="modal-box-content" data-testid="modal-box-content">
-      <div className="user-post-image" data-testid="box-avatar">
+    <div className="flex items-center gap-3 px-4 py-3 select-none" data-testid="modal-box-content">
+      <div className="shrink-0 flex items-center justify-center">
         <Avatar
           name={profile?.username!}
           bgColor={profile?.avatarColor!}
           textColor="#ffffff"
-          size={40}
+          size={42}
           avatarSrc={profile?.profilePicture!}
         />
       </div>
-      <div className="modal-box-info">
-        <h5 className="inline-title-display" data-testid="box-username">
-          {profile?.username}
-        </h5>
-        {feeling?.name && (
-          <p className="inline-display" data-testid="box-feeling">
-            is feeling <img className="feeling-icon" src={`${feeling?.image}`} alt="" /> <span>{feeling?.name}</span>
-          </p>
-        )}
-        <div
-          data-testid="box-text-display"
-          className="time-text-display"
-          onClick={() => setTogglePrivacy(!togglePrivacy)}
-        >
-          <div className="selected-item-text" data-testid="box-item-text">
-            {selectedItem.topText}
-          </div>
-          <div ref={privacyRef}>
-            <SelectDropdown isActive={togglePrivacy} items={privacyList} setSelectedItem={setSelectedItem} />
+      <div className="flex flex-col min-w-0 justify-center">
+        <div className="flex flex-wrap items-center gap-1 leading-normal">
+          <span className="font-bold text-[15px] text-[#050505]">
+            {profile?.username}
+          </span>
+          {feeling && typeof feeling !== 'string' && (feeling as any).name && (
+            <div className="flex items-center text-[15px] text-[#050505]">
+              <span className="mr-1">is</span>
+              <img className="w-7 h-7 object-contain mx-0.5" src={`${(feeling as any).image}`} alt="" />
+              <span className="font-bold">feeling {(feeling as any).name}.</span>
+            </div>
+          )}
+        </div>
+        
+        <div className="mt-0.5">
+          <div
+            className="inline-flex items-center gap-1 px-2 py-1 bg-[#e4e6eb] hover:bg-[#d8dadf] transition-colors rounded-md cursor-pointer text-[#050505] text-[12px] font-semibold"
+            onClick={() => setTogglePrivacy(!togglePrivacy)}
+          >
+            <FaGlobe className="text-[11px]" />
+            <span>{selectedItem.topText}</span>
+            <FaCaretDown className="text-[10px]" />
           </div>
         </div>
       </div>

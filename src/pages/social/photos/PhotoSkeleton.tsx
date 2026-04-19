@@ -3,17 +3,20 @@ import Skeleton from 'react-loading-skeleton';
 const PhotoSkeleton = () => {
   return (
     <>
-      <div className="photos-container">
-        <div className="photos">Photos</div>
-        <div className="gallery-images">
-          {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((_post, index) => (
-            <div key={index}>
-              <Skeleton baseColor="#EFF1F6" height={352} width={352} style={{ borderRadius: '16px' }} />
-            </div>
-          ))}
+      {[1, 2, 3, 4, 5, 6, 7, 8].map((_post, index) => (
+        <div key={index} className="w-full aspect-square animate-in fade-in duration-500" style={{ animationDelay: `${index * 50}ms` }}>
+          <Skeleton 
+             baseColor="#f3f4f6" 
+             highlightColor="#ffffff"
+             height="100%" 
+             width="100%" 
+             style={{ borderRadius: '32px' }} 
+          />
         </div>
-      </div>
+      ))}
     </>
   );
 };
+
 export default PhotoSkeleton;
+

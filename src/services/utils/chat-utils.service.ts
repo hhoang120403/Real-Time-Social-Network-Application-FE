@@ -6,14 +6,18 @@ import { createSearchParams } from 'react-router-dom';
 export class ChatUtils {
   static privateChatMessages: any[] = [];
   static chatUsers: any[] = [];
+  static chatListHandler: ((data: any) => void) | null = null;
 
   static usersOnline(setOnlineUsers: (data: any[]) => void) {
+    socketService?.socket?.off('user online');
     socketService?.socket?.on('user online', (data: any[]) => {
       setOnlineUsers(data);
     });
+    socketService?.socket?.emit('get online users');
   }
 
   static usersOnChatPage() {
+    socketService?.socket?.off('add chat users');
     socketService?.socket?.on('add chat users', (data: any[]) => {
       ChatUtils.chatUsers = [...data];
     });
@@ -33,7 +37,7 @@ export class ChatUtils {
     socketService?.socket?.emit(event, data);
   }
 
-  static chatUrlParams(user: any, profile) {
+  static chatUrlParams(user: any, profile: any) {
     const params = { username: '', id: '' };
     if (user.receiverUsername === profile?.username) {
       params.username = user.senderUsername.toLowerCase();
@@ -54,7 +58,7 @@ export class ChatUtils {
     isRead,
     gifUrl,
     selectedImage
-  }) {
+  }: any) {
     const chatConversationId = find(
       chatMessages,
       (chat) => chat.receiverId === searchParamsId || chat.senderId === searchParamsId
@@ -83,7 +87,7 @@ export class ChatUtils {
     pathname,
     navigate,
     dispatch
-  }) {
+  }: any) {
     if (chatMessageList.length) {
       dispatch(setSelectedChatUser({ isLoading: false, user: chatMessageList[0] }));
       navigate(`${pathname}?${createSearchParams(params)}`);
@@ -99,55 +103,80 @@ export class ChatUtils {
     }
   }
 
-  static socketIOChatList(profile, chatMessageList, setChatMessageList) {
-    socketService?.socket?.on('chat list', (data) => {
+  static socketIOChatList(profile: any, chatMessageList: any, setChatMessageList: any) {
+    if (ChatUtils.chatListHandler) {
+      socketService?.socket?.off('chat list', ChatUtils.chatListHandler);
+    }
+    ChatUtils.chatListHandler = (data: any) => {
       if (data.senderUsername === profile?.username || data.receiverUsername === profile?.username) {
-        const messageIndex = findIndex(chatMessageList, ['conversationId', data.conversationId]);
-        chatMessageList = cloneDeep(chatMessageList);
-        if (messageIndex > -1) {
-          remove(chatMessageList, (chat) => chat.conversationId === data.conversationId);
-          chatMessageList = [data, ...chatMessageList];
-        } else {
-          remove(chatMessageList, (chat) => chat.receiverUsername === data.receiverUsername);
-          chatMessageList = [data, ...chatMessageList];
-        }
-        setChatMessageList(chatMessageList);
+        setChatMessageList((currentList: any[]) => {
+          const list = cloneDeep(currentList?.length ? currentList : chatMessageList);
+          remove(list, (chat: any) => {
+            const isSameConversation = `${chat.conversationId}` === `${data.conversationId}`;
+            const isSameParticipants =
+              (chat.senderId === data.senderId && chat.receiverId === data.receiverId) ||
+              (chat.senderId === data.receiverId && chat.receiverId === data.senderId);
+
+            return isSameConversation || isSameParticipants;
+          });
+          return [data, ...list];
+        });
       }
-    });
+    };
+    socketService?.socket?.on('chat list', ChatUtils.chatListHandler);
   }
 
-  static socketIOMessageReceived(chatMessages, username, setConversationId, setChatMessages) {
-    chatMessages = cloneDeep(chatMessages);
-    socketService?.socket?.on('message received', (data) => {
-      if (data.senderUsername.toLowerCase() === username || data.receiverUsername.toLowerCase() === username) {
+  static socketIOMessageReceived(username: any, setConversationId: any, setChatMessages: any) {
+    socketService?.socket?.off('message received');
+    socketService?.socket?.on('message received', (data: any) => {
+      if (data.senderUsername.toLowerCase() === username?.toLowerCase() || data.receiverUsername.toLowerCase() === username?.toLowerCase()) {
         setConversationId(data.conversationId);
-        ChatUtils.privateChatMessages.push(data);
-        chatMessages = [...ChatUtils.privateChatMessages];
-        setChatMessages(chatMessages);
+        const existingMessage = find(ChatUtils.privateChatMessages, ['_id', data._id]);
+        if (!existingMessage) {
+          ChatUtils.privateChatMessages.push(data);
+          const messages = [...ChatUtils.privateChatMessages];
+          setChatMessages(messages);
+        }
       }
     });
 
-    socketService?.socket?.on('message read', (data) => {
-      if (data.senderUsername.toLowerCase() === username || data.receiverUsername.toLowerCase() === username) {
+    socketService?.socket?.off('message read');
+    socketService?.socket?.on('message read', (data: any) => {
+      if (data.senderUsername.toLowerCase() === username?.toLowerCase() || data.receiverUsername.toLowerCase() === username?.toLowerCase()) {
         const findMessageIndex = findIndex(ChatUtils.privateChatMessages, ['_id', data._id]);
         if (findMessageIndex > -1) {
           ChatUtils.privateChatMessages.splice(findMessageIndex, 1, data);
-          chatMessages = [...ChatUtils.privateChatMessages];
-          setChatMessages(chatMessages);
+          const messages = [...ChatUtils.privateChatMessages];
+          setChatMessages(messages);
         }
       }
     });
   }
 
-  static socketIOMessageReaction(chatMessages, username, setConversationId, setChatMessages) {
-    socketService?.socket?.on('message reaction', (data) => {
-      if (data.senderUsername.toLowerCase() === username || data.receiverUsername.toLowerCase() === username) {
-        chatMessages = cloneDeep(chatMessages);
+  static socketIOMessageReaction(username: any, setConversationId: any, setChatMessages: any) {
+    socketService?.socket?.off('message reaction');
+    socketService?.socket?.on('message reaction', (data: any) => {
+      if (data.senderUsername.toLowerCase() === username?.toLowerCase() || data.receiverUsername.toLowerCase() === username?.toLowerCase()) {
         setConversationId(data.conversationId);
-        const messageIndex = findIndex(chatMessages, (message) => message?._id === data._id);
+        const messageIndex = findIndex(ChatUtils.privateChatMessages, (message: any) => message?._id === data._id);
         if (messageIndex > -1) {
-          chatMessages.splice(messageIndex, 1, data);
-          setChatMessages(chatMessages);
+          ChatUtils.privateChatMessages.splice(messageIndex, 1, data);
+          const messages = [...ChatUtils.privateChatMessages];
+          setChatMessages(messages);
+        }
+      }
+    });
+  }
+
+  static socketIOMessageUpdate(username: any, setChatMessages: any) {
+    socketService?.socket?.off('message update');
+    socketService?.socket?.on('message update', (data: any) => {
+      if (data.senderUsername.toLowerCase() === username?.toLowerCase() || data.receiverUsername.toLowerCase() === username?.toLowerCase()) {
+        const messageIndex = findIndex(ChatUtils.privateChatMessages, (message: any) => message?._id === data._id);
+        if (messageIndex > -1) {
+          ChatUtils.privateChatMessages.splice(messageIndex, 1, data);
+          const messages = [...ChatUtils.privateChatMessages];
+          setChatMessages(messages);
         }
       }
     });

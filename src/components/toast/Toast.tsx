@@ -54,11 +54,11 @@ const Toast = (props: ToastProps) => {
           <button className="cancel-button" onClick={() => deleteToast()}>
             X
           </button>
-          <div className={`toast-notification-image ${toast.description.length <= 73 ? 'toast-icon' : ''}`}>
+          <div className={`toast-notification-image ${(toast.description?.length ?? 0) <= 73 ? 'toast-icon' : ''}`}>
             <img src={toast.icon} alt="" />
           </div>
-          <div className={`toast-notification-message ${toast.description.length <= 73 ? 'toast-message' : ''}`}>
-            {toast.description}
+          <div className={`toast-notification-message ${(toast.description?.length ?? 0) <= 73 ? 'toast-message' : ''}`}>
+            {toast.description ?? ''}
           </div>
         </div>
       ))}

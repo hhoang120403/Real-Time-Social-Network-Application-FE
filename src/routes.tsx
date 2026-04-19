@@ -1,5 +1,5 @@
 import { useRoutes } from 'react-router-dom';
-import { AuthTabs, ForgotPassword, ResetPassword } from '@pages/auth';
+import { AuthTabs, ForgotPassword, ResetPassword, VerifyEmail } from '@pages/auth';
 import ProtectedRoute from '@pages/ProtectedRoute';
 import Error from '@pages/error/Error';
 import StreamsSkeleton from '@pages/social/streams/StreamsSkeleton';
@@ -7,6 +7,7 @@ import { lazy, Suspense } from 'react';
 import NotificationSkeleton from '@pages/social/notifications/NotificationSkeleton';
 import CardSkeleton from '@components/card-element/CardSkeleton';
 import PhotoSkeleton from '@pages/social/photos/PhotoSkeleton';
+import ProfileSkeleton from '@pages/social/profile/ProfileSkeleton';
 
 const Social = lazy(() => import('@pages/social/Social'));
 const Chat = lazy(() => import('@pages/social/chat/Chat'));
@@ -31,6 +32,10 @@ export const AppRouter = () => {
     {
       path: '/reset-password',
       element: <ResetPassword />
+    },
+    {
+      path: '/verify-email',
+      element: <VerifyEmail />
     },
     {
       path: '/app/social',
@@ -99,7 +104,7 @@ export const AppRouter = () => {
         {
           path: 'profile/:username',
           element: (
-            <Suspense>
+            <Suspense fallback={<ProfileSkeleton />}>
               <Profile />
             </Suspense>
           )

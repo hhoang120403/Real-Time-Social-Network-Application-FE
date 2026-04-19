@@ -31,9 +31,15 @@ const Posts = ({ allPosts, userFollowing, postsLoading }: PostsProps) => {
       {posts.length > 0 &&
         posts.map((post) => (
           <div key={post?._id}>
-            {(!Utils.checkIfUserIsBlocked(profile?.blockedBy || [], post?.userId) || post?.userId === profile?._id) && (
-              <>{PostUtils.checkPrivacy(post, profile, following) && <Post post={post} showIcons={false} />}</>
-            )}
+            {(!Utils.checkIfUserIsBlocked(profile?.blockedBy || [], post?.userId) &&
+              !Utils.checkIfUserIsBlocked(profile?.blocked || [], post?.userId)) ||
+            post?.userId === profile?._id ? (
+              <>
+                {PostUtils.checkPrivacy(post, profile, following) && (
+                  <Post post={post} showIcons={false} setPosts={setPosts} />
+                )}
+              </>
+            ) : null}
           </div>
         ))}
 

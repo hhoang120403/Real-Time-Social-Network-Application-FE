@@ -35,6 +35,9 @@ interface PostData {
   image?: string;
   imgId?: string;
   imgVersion?: string;
+  video?: string;
+  videoId?: string;
+  videoVersion?: string;
 }
 
 interface Privacy {

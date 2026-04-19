@@ -1,7 +1,7 @@
-import blessed from '@root/assets/feelings/blessed.jpg';
-import excited from '@root/assets/feelings/excited.jpg';
-import happyFeeling from '@root/assets/feelings/happy.jpg';
-import loved from '@root/assets/feelings/loved.jpg';
+import blessed from '@root/assets/feelings/blessed.png';
+import excited from '@root/assets/feelings/excited.png';
+import happyFeeling from '@root/assets/feelings/happy.png';
+import loved from '@root/assets/feelings/loved.png';
 import angry from '@root/assets/reactions/angry.png';
 import happy from '@root/assets/reactions/happy.png';
 import like from '@root/assets/reactions/like.png';
@@ -149,9 +149,7 @@ export const bgColors = [
   '#4caf50',
   '#ff9800',
   '#8bc34a',
-  '#009688',
-  '#03a9f4',
-  '#cddc39'
+  '#009688'
 ];
 
 export const avatarColors = [
@@ -190,6 +188,7 @@ export const emptyPostData = {
   gifUrl: '',
   profilePicture: '',
   image: '',
+  video: '',
   userId: '',
   username: '',
   email: '',
@@ -205,6 +204,8 @@ export const emptyPostData = {
   },
   imgVersion: '',
   imgId: '',
+  videoVersion: '',
+  videoId: '',
   createdAt: ''
 };
 

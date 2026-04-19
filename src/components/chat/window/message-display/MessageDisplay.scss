@@ -1,6 +1,4 @@
 .message-page {
-  max-height: 780px;
-  overflow-y: scroll;
   font-weight: 500;
   scroll-behavior: smooth;
 
@@ -10,15 +8,18 @@
 
     .message-chat-date {
       color: var(--primary-1);
-      font-size: 14px;
+      font-size: 13px;
+      font-weight: 700;
       text-align: center;
-      margin-bottom: 15px;
+      margin-bottom: 20px;
+      margin-top: 10px;
+      opacity: 0.7;
     }
 
     .message {
       display: flex;
       align-items: flex-end;
-      margin-bottom: 10px;
+      margin-bottom: 2px;
 
       .message-content {
         display: grid;
@@ -90,9 +91,9 @@
 
       .message-reactions-container {
         grid-area: reactions;
-        margin-bottom: 10px;
         width: 100%;
-        height: 30px;
+        height: auto;
+        min-height: 0;
         justify-content: flex-start;
         display: flex;
 
@@ -168,14 +169,20 @@
               align-items: center;
               justify-content: center;
               align-self: center;
-              font-size: 25px;
+              font-size: 20px;
               border-radius: 50%;
-              width: 30px;
-              height: 30px;
+              width: 26px;
+              height: 26px;
               text-align: center;
               background-color: var(--white-5);
               color: var(--gray-3);
               cursor: pointer;
+              opacity: 0.6;
+              transition: opacity 0.2s ease;
+
+              &:hover {
+                opacity: 1;
+              }
             }
           }
 
@@ -224,9 +231,9 @@
 
       .message-right-reactions-container {
         grid-area: rightReactions;
-        margin-bottom: 10px;
         width: 100%;
-        height: 30px;
+        height: auto;
+        min-height: 0;
         justify-content: flex-end;
         display: flex;
 
@@ -300,14 +307,20 @@
           align-self: center;
           justify-content: center;
           float: right;
-          font-size: 25px;
+          font-size: 20px;
           border-radius: 50%;
-          width: 30px;
-          height: 30px;
+          width: 26px;
+          height: 26px;
           text-align: center;
           background-color: var(--white-5);
           color: var(--gray-3);
           cursor: pointer;
+          opacity: 0.6;
+          transition: opacity 0.2s ease;
+
+          &:hover {
+            opacity: 1;
+          }
         }
       }
 

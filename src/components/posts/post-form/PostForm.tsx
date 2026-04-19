@@ -1,8 +1,6 @@
 import Avatar from '@components/avatar/Avatar';
-import Input from '@components/input/Input';
 import type { AppDispatch, RootState } from '@redux/store';
 import { useSelector } from 'react-redux';
-import '@components/posts/post-form/PostForm.scss';
 import photoIcon from '@assets/images/photo.png';
 import gifIcon from '@assets/images/gif.png';
 import feelingIcon from '@assets/images/feeling.png';
@@ -55,46 +53,79 @@ const PostForm = () => {
 
   return (
     <>
-      <div className="post-form" data-testid="post-form">
-        <div className="post-form-row">
-          <div className="post-form-header">
-            <h4 className="post-form-title">Create Post</h4>
+      <div 
+        className="bg-white rounded-xl shadow-sm border border-gray-100 p-2.5 sm:p-3 flex items-center gap-2 sm:gap-3 select-none" 
+        data-testid="post-form"
+      >
+        <div className="shrink-0">
+          <Avatar
+            name={profile?.username!}
+            bgColor={profile?.avatarColor!}
+            textColor="#ffffff"
+            size={40}
+            avatarSrc={profile?.profilePicture!}
+          />
+        </div>
+        
+        <div 
+          className="flex-1 bg-[#f0f2f5] hover:bg-[#e4e6e9] transition-colors rounded-full px-3 sm:px-4 py-2 sm:py-2.5 cursor-pointer text-gray-500 text-[14px] sm:text-[15px] truncate" 
+          data-testid="input-body" 
+          onClick={openPostModal}
+        >
+          What's on your mind, {profile?.username}?
+        </div>
+
+        <div className="flex items-center gap-0.5 sm:gap-2 shrink-0">
+          {/* Photo/Video Icon */}
+          <div 
+            className="w-9 h-9 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors cursor-pointer group relative"
+            title="Photo/Video"
+            onClick={openImageModel}
+          >
+            <input
+              name="image"
+              ref={fileInputRef}
+              type="file"
+              className="hidden"
+              onClick={(e) => {
+                e.stopPropagation();
+                if (fileInputRef.current) {
+                  fileInputRef.current.value = '';
+                }
+              }}
+              onChange={handleFileChange}
+            />
+            <img 
+              src={photoIcon} 
+              alt="" 
+              className="w-6 h-6 object-contain group-hover:scale-110 transition-transform" 
+            />
           </div>
-          <div className="post-form-body">
-            <div className="post-form-input-body" data-testid="input-body" onClick={openPostModal}>
-              <Avatar
-                name={profile?.username!}
-                bgColor={profile?.avatarColor!}
-                textColor="#ffffff"
-                size={50}
-                avatarSrc={profile?.profilePicture!}
-              />
-              <div className="post-form-input" data-placeholder="Write something here..."></div>
-            </div>
-            <hr />
-            <ul className="post-form-list" data-testid="list-item">
-              <li className="post-form-list-item image-select" onClick={openImageModel}>
-                <Input
-                  name="image"
-                  ref={fileInputRef}
-                  type="file"
-                  className="file-input"
-                  onClick={() => {
-                    if (fileInputRef.current) {
-                      fileInputRef.current.value = '';
-                    }
-                  }}
-                  onChange={handleFileChange}
-                />
-                <img src={photoIcon} alt="" /> Photo
-              </li>
-              <li className="post-form-list-item" onClick={openGifModal}>
-                <img src={gifIcon} alt="" /> Gif
-              </li>
-              <li className="post-form-list-item" onClick={openFeelingComponent}>
-                <img src={feelingIcon} alt="" /> Feeling
-              </li>
-            </ul>
+
+          {/* Gif Icon */}
+          <div 
+            className="w-9 h-9 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors cursor-pointer group"
+            title="GIF"
+            onClick={openGifModal}
+          >
+            <img 
+              src={gifIcon} 
+              alt="" 
+              className="w-6 h-6 object-contain group-hover:scale-110 transition-transform" 
+            />
+          </div>
+
+          {/* Feeling Icon */}
+          <div 
+            className="w-9 h-9 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors cursor-pointer group"
+            title="Feeling/Activity"
+            onClick={openFeelingComponent}
+          >
+            <img 
+              src={feelingIcon} 
+              alt="" 
+              className="w-6 h-6 object-contain group-hover:scale-110 transition-transform" 
+            />
           </div>
         </div>
       </div>

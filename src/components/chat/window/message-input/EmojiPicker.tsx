@@ -6,8 +6,8 @@ interface EmojiPickerProps {
 }
 
 const EmojiPicker = ({ onEmojiClick, pickerStyle }: EmojiPickerProps) => (
-  <div className="emoji-picker" data-testid="emoji-container" style={pickerStyle}>
-    <Picker onEmojiClick={(emojiData) => onEmojiClick(emojiData)} />
+  <div data-testid="emoji-container" style={pickerStyle}>
+    <Picker width="100%" height="100%" onEmojiClick={(emojiData) => onEmojiClick(emojiData)} />
   </div>
 );
 

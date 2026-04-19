@@ -1,5 +1,5 @@
-import '@components/chat/list/search-list/SearchList.scss';
 import Avatar from '@components/avatar/Avatar';
+import { Box, CircularProgress, Typography } from '@mui/material';
 import { useLocation, useNavigate, createSearchParams } from 'react-router-dom';
 import type { IUser } from '@root/types/user';
 
@@ -38,14 +38,14 @@ const SearchList = ({
   };
 
   return (
-    <div className="search-result">
-      <div className="search-result-container">
+    <Box className="h-full overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+      <Box className="flex flex-col gap-1">
         {!isSearching && result?.length > 0 && (
           <>
             {result.map((user) => (
-              <div
+              <Box
                 data-testid="search-result-item"
-                className="search-result-container-item"
+                className="flex w-full cursor-pointer items-center gap-3 rounded-2xl p-3 transition-colors hover:bg-slate-50"
                 key={user._id}
                 onClick={() => addUsernameToUrlQuery(user)}
               >
@@ -56,26 +56,34 @@ const SearchList = ({
                   size={40}
                   avatarSrc={user.profilePicture}
                 />
-                <div className="username">{user.username}</div>
-              </div>
+                <Typography className="min-w-0 flex-1 truncate text-[14px] font-bold text-slate-900">
+                  {user.username}
+                </Typography>
+              </Box>
             ))}
           </>
         )}
 
         {searchTerm && isSearching && result?.length === 0 && (
-          <div className="search-result-container-empty" data-testid="searching-text">
-            <span>Searching...</span>
-          </div>
+          <Box
+            className="flex flex-col items-center justify-center gap-3 py-10 text-center"
+            data-testid="searching-text"
+          >
+            <CircularProgress size={24} className="text-blue-600" />
+            <Typography className="text-[14px] font-semibold text-slate-500">Searching...</Typography>
+          </Box>
         )}
 
         {searchTerm && !isSearching && result?.length === 0 && (
-          <div className="search-result-container-empty" data-testid="nothing-found">
-            <span>Nothing found</span>
-            <p className="search-result-container-empty-msg">We couldn&apos;t find any match for {searchTerm}</p>
-          </div>
+          <Box className="px-6 py-10 text-center" data-testid="nothing-found">
+            <Typography className="text-[16px] font-bold text-slate-700">Nothing found</Typography>
+            <Typography className="mt-1 break-words text-[13px] text-slate-400">
+              We couldn&apos;t find any match for {searchTerm}
+            </Typography>
+          </Box>
         )}
-      </div>
-    </div>
+      </Box>
+    </Box>
   );
 };
 

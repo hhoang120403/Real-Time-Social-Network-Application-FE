@@ -19,7 +19,7 @@ const Giphy = () => {
   const dispatch = useDispatch<AppDispatch>();
 
   const selectGif = (gif: any) => {
-    dispatch(updatePostItem({ gifUrl: gif, image: '' }));
+    dispatch(updatePostItem({ gifUrl: gif, image: '', video: '', videoId: '', videoVersion: '' }));
     dispatch(toggleGifModal(!gifModalIsOpen));
   };
 
