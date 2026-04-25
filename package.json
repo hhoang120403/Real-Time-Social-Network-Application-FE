@@ -21,6 +21,7 @@
     "@mui/icons-material": "^7.3.9",
     "@mui/material": "^7.3.9",
     "@reduxjs/toolkit": "^2.11.2",
+    "@stream-io/video-react-sdk": "^1.35.2",
     "@tailwindcss/vite": "^4.2.2",
     "axios": "^1.13.6",
     "class-variance-authority": "^0.7.1",

@@ -11,6 +11,7 @@ import { Utils } from '@services/utils/utils.service';
 import { Navigate, useNavigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import type { RootState } from '@redux/store';
+import { startAuthTransition } from '@services/axios';
 import { getConversationList } from '@redux/api/chat';
 
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
@@ -37,6 +38,7 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
     } catch (error) {
       setTokenIsValid(false);
       setTimeout(async () => {
+        startAuthTransition();
         Utils.clearStore({ dispatch, deleteStorageUsername, deleteSessionPageReload, setLoggedIn });
         await userService.logoutUser();
         navigate('/');

@@ -12,6 +12,7 @@ import { useSearchParams } from 'react-router-dom';
 import MessageDisplay from './message-display/MessageDisplay';
 import { getConversationList } from '@redux/api/chat';
 import { Box, IconButton, Tooltip, Typography, CircularProgress } from '@mui/material';
+import { useStreamVideoClient } from '@stream-io/video-react-sdk';
 
 const ChatWindow = () => {
   const { profile } = useSelector((state: RootState) => state.user);
@@ -23,6 +24,7 @@ const ChatWindow = () => {
   const [rendered, setRendered] = useState(false);
   const [editingMessage, setEditingMessage] = useState<any>(null);
   const dispatch = useDispatch<AppDispatch>();
+  const videoClient = useStreamVideoClient();
 
   const getChatMessages = useCallback(
     async (receiverId: string) => {
@@ -131,6 +133,30 @@ const ChatWindow = () => {
     }
   };
 
+  // Video Call Handler
+  const startVideoCall = async () => {
+    if (!videoClient || !profile || !receiver) {
+      Utils.dispatchNotification('Video Calling is currently unavailable', 'error', dispatch);
+      return;
+    }
+    try {
+      const callId = `${profile._id}-${receiver._id}-${Date.now()}`;
+      const call = videoClient.call('default', callId);
+
+      await call.getOrCreate({
+        ring: true,
+        data: {
+          members: [{ user_id: profile._id as string }, { user_id: receiver._id as string }]
+        }
+      });
+
+      Utils.dispatchNotification('Calling...', 'success', dispatch);
+    } catch (error) {
+      console.error('Failed to start call', error);
+      Utils.dispatchNotification('Failed to start video call', 'error', dispatch);
+    }
+  };
+
   useEffect(() => {
     if (!profile || !searchParams.get('id') || !searchParams.get('username')) return;
     if (rendered) {
@@ -214,7 +240,7 @@ const ChatWindow = () => {
             {/* Header Actions (Messenger Style) */}
             <Box className="flex items-center gap-2 shrink-0">
               <Tooltip title="Start a video call" arrow>
-                <IconButton className="text-primary hover:bg-slate-100 p-2.5 transition-all">
+                <IconButton className="text-primary hover:bg-slate-100 p-2.5 transition-all" onClick={startVideoCall}>
                   <svg className="w-5.5 h-5.5" fill="none" stroke="currentColor" strokeWidth="2.5" viewBox="0 0 24 24">
                     <path
                       strokeLinecap="round"

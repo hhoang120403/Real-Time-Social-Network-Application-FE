@@ -22,7 +22,6 @@ import { notificationService } from '@services/api/notifications/notification.se
 import { NotificationUtils } from '@services/utils/notification-utils.service';
 import type { NotificationDialogState } from '@pages/social/notifications/Notifications';
 import NotificationPreview from '@components/dialog/NotificationPreview';
-import { socketService } from '@services/socket/socket.service';
 import { sumBy, debounce } from 'lodash';
 import { ChatUtils } from '@services/utils/chat-utils.service';
 import { chatService } from '@services/api/chat/chat.service';
@@ -84,7 +83,7 @@ const Header = ({ toggleSidebar }: IHeaderProps) => {
   const [isMessageActive, setIsMessageActive] = useDetectOutsideClick(messageRef, false);
   const [isNotificationActive, setIsNotificationActive] = useDetectOutsideClick(notificationRef, false);
 
-  const storedUsername = useLocalStorage('username', 'get');
+  // const storedUsername = useLocalStorage('username', 'get');
   const [deleteStorageUsername] = useLocalStorage('username', 'delete');
   const [setLoggedIn] = useLocalStorage('keepLoggedIn', 'set');
   const [deleteSessionPageReload] = useSessionStorage('pageReload', 'delete');
@@ -97,7 +96,6 @@ const Header = ({ toggleSidebar }: IHeaderProps) => {
         setNotificationCount
       );
       setNotifications(mappedNotifications);
-      socketService?.socket.emit('setup', { userId: profile?.username || storedUsername });
     } catch (error: any) {
       if (!Utils.shouldSkipErrorNotification(error)) {
         Utils.dispatchNotification(error?.response?.data?.message, 'error', dispatch);

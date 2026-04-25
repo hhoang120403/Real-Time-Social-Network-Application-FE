@@ -77,7 +77,7 @@ const SearchList = ({
         {searchTerm && !isSearching && result?.length === 0 && (
           <Box className="px-6 py-10 text-center" data-testid="nothing-found">
             <Typography className="text-[16px] font-bold text-slate-700">Nothing found</Typography>
-            <Typography className="mt-1 break-words text-[13px] text-slate-400">
+            <Typography className="mt-1 wrap-break-word text-[13px] text-slate-400">
               We couldn&apos;t find any match for {searchTerm}
             </Typography>
           </Box>

@@ -47,7 +47,7 @@ const Toast = (props: ToastProps) => {
       {list.map((toast) => (
         <div
           data-testid="toast-notification"
-          key={Utils.generateString(10)}
+          key={`${toast.id}-${toast.type}-${toast.description}`}
           className={`toast-notification toast ${position}`}
           style={{ backgroundColor: toast.backgroundColor }}
         >

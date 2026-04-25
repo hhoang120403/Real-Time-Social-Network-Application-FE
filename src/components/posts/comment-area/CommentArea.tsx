@@ -1,5 +1,6 @@
-import { FaRegCommentAlt } from 'react-icons/fa';
+import { FaRegCommentAlt, FaRegBookmark } from 'react-icons/fa';
 import './CommentArea.scss';
+import SaveToModal from '../post-modal/save-to-modal/SaveToModal';
 import type { PostItem } from '@app-types/post';
 import Reactions from '../reactions/Reaction';
 import { useCallback, useEffect, useState } from 'react';
@@ -13,8 +14,8 @@ import type { ReactionType } from '@app-types/reaction';
 import type { CreateReactionPayload, IReaction } from '@app-types/reactions';
 import { addReactions } from '@redux/reducers/post/user-post-reaction.reducer';
 import { socketService } from '@services/socket/socket.service';
-import useLocalStorage from '@hooks/useLocalStorage';
-import { clearPost, updatePostItem } from '@redux/reducers/post/post.reducer';
+import { updatePostItem } from '@redux/reducers/post/post.reducer';
+import { toggleCommentsModal } from '@redux/reducers/modal/modal.reducer';
 
 interface ICommentAreaProps {
   post: PostItem;
@@ -25,11 +26,10 @@ const CommentArea = ({ post, setPosts }: ICommentAreaProps) => {
   const { profile } = useSelector((state: RootState) => state.user);
   let { reactions } = useSelector((state: RootState) => state.userPostReaction);
   const [selectedReaction, setSelectedReaction] = useState<string>('like');
-  const selectedPostId = useLocalStorage('selectedPostId', 'get');
-  const [setSelectedPostId] = useLocalStorage('selectedPostId', 'set');
   const dispatch = useDispatch<AppDispatch>();
 
   const [showReactions, setShowReactions] = useState<boolean>(false);
+  const [showSaveModal, setShowSaveModal] = useState<boolean>(false);
 
   const selectedUserReaction = useCallback(
     (postReactions: any[]) => {
@@ -44,22 +44,8 @@ const CommentArea = ({ post, setPosts }: ICommentAreaProps) => {
   );
 
   const toggleCommentInput = () => {
-    if (!selectedPostId) {
-      setSelectedPostId(post._id!);
-      dispatch(updatePostItem(post));
-    } else {
-      removeSelectedPostId();
-    }
-  };
-
-  const removeSelectedPostId = () => {
-    if (selectedPostId === post._id) {
-      setSelectedPostId('');
-      dispatch(clearPost());
-    } else {
-      setSelectedPostId(post._id!);
-      dispatch(updatePostItem(post));
-    }
+    dispatch(updatePostItem(post));
+    dispatch(toggleCommentsModal(true));
   };
 
   const addReactionPost = async (reaction: ReactionType) => {
@@ -238,6 +224,18 @@ const CommentArea = ({ post, setPosts }: ICommentAreaProps) => {
         <FaRegCommentAlt className="text-[16px]" />
         <span className="text-[15px]">Comments</span>
       </div>
+
+      <div
+        className="flex-1 flex items-center justify-center py-[10px] rounded-lg cursor-pointer transition-all duration-200 hover:bg-[#f2f3f5] text-[#65676b] font-semibold gap-[10px]"
+        onClick={() => setShowSaveModal(true)}
+      >
+        <FaRegBookmark className="text-[16px]" />
+        <span className="text-[15px]">Save</span>
+      </div>
+
+      {showSaveModal && (
+        <SaveToModal postId={post._id!} onClose={() => setShowSaveModal(false)} />
+      )}
     </div>
   );
 };

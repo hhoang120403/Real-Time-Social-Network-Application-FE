@@ -52,6 +52,11 @@ class ChatService {
     const response = await axiosInstance.put('/chat/message/update', body);
     return response;
   }
+
+  async getVideoToken(): Promise<{ data: { token: string } }> {
+    const response = await axiosInstance.get('/chat/video/token');
+    return response;
+  }
 }
 
 export const chatService = new ChatService();

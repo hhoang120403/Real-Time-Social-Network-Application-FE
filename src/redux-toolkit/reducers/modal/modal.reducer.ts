@@ -3,7 +3,7 @@ import { createSlice } from '@reduxjs/toolkit';
 const initialState = {
   type: '',
   isOpen: false,
-  feeling: '',
+  feeling: null as any,
   image: '',
   data: null,
   feelingsIsOpen: false,

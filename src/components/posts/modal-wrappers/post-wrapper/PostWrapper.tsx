@@ -1,19 +1,29 @@
 import { createPortal } from 'react-dom';
 import React, { useRef, useEffect } from 'react';
 import { useDispatch } from 'react-redux';
-import useDetectOutsideClick from '@hooks/useDetectOutsideClick';
 import { PostUtils } from '@services/utils/post-utils.service';
 
-const PostWrapper = ({ children }: { children: React.ReactNode }) => {
+const PostWrapper = ({ children, loading }: { children: React.ReactNode; loading?: boolean }) => {
   const dispatch = useDispatch();
   const modalRef = useRef<HTMLDivElement>(null);
-  const [isActive] = useDetectOutsideClick(modalRef, true);
 
   useEffect(() => {
-    if (!isActive) {
-      PostUtils.closePostModal(dispatch);
-    }
-  }, [isActive, dispatch]);
+    const handleClickOutside = (event: MouseEvent) => {
+      // If loading, absolutely do nothing
+      if (loading) return;
+
+      const target = event.target as Node;
+      // Check if the click is outside the modal content
+      if (modalRef.current && !modalRef.current.contains(target)) {
+        PostUtils.closePostModal(dispatch);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [dispatch, loading]);
 
   const childrenArray = React.Children.toArray(children);
 
@@ -23,10 +33,7 @@ const PostWrapper = ({ children }: { children: React.ReactNode }) => {
       data-testid="post-modal"
     >
       {/* Backdrop */}
-      <div
-        className="fixed inset-0 bg-black/60 z-0 transition-opacity"
-        onClick={() => PostUtils.closePostModal(dispatch)}
-      ></div>
+      <div className="fixed inset-0 bg-black/60 z-0 transition-opacity"></div>
 
       {/* Container for modal boxes */}
       <div className="z-10 w-full flex flex-col items-center justify-center relative pointer-events-none">

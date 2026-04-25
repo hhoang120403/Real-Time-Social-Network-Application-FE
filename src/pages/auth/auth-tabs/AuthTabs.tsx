@@ -40,7 +40,7 @@ const AuthTabs = () => {
       sessionStorage.removeItem('pendingToast');
     }
 
-    clearAuthTransition();
+    window.setTimeout(clearAuthTransition, 1500);
   }, [keepLoggedIn, navigate, dispatch, type]); // Added type to dependencies to re-check toast on tab change
 
   return (

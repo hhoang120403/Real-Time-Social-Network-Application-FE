@@ -25,7 +25,7 @@ export interface PostItem {
   createdAt: string; // nếu muốn strict hơn có thể dùng Date
 }
 
-interface PostData {
+export interface PostData {
   post: string;
   bgColor: string;
   privacy: string;
@@ -40,16 +40,14 @@ interface PostData {
   videoVersion?: string;
 }
 
-interface Privacy {
+export interface Privacy {
   topText: string;
   subText: string;
   icon: React.ReactNode;
 }
 
-interface Feeling {
+export interface Feeling {
   index: number;
   name: string;
   image: string;
 }
-
-export type { PostData, Privacy, Feeling };

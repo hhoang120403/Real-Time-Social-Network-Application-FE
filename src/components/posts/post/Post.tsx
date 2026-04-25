@@ -33,6 +33,7 @@ const Post = ({ post, showIcons, setPosts }: PostProps) => {
   const { reactionsModalIsOpen, commentsModalIsOpen, deletePostDialogIsOpen, data } = useSelector(
     (state: RootState) => state.modal
   );
+  const selectedPost = useSelector((state: RootState) => state.post);
   const [showImageModal, setShowImageModal] = useState<boolean>(false);
   const [showActionDropdown, setShowActionDropdown] = useState<boolean>(false);
   const [imageUrl, setImageUrl] = useState<string>('');
@@ -96,7 +97,7 @@ const Post = ({ post, showIcons, setPosts }: PostProps) => {
   return (
     <>
       {reactionsModalIsOpen && <ReactionsModal />}
-      {commentsModalIsOpen && <CommentsModal />}
+      {commentsModalIsOpen && selectedPost?._id === post?._id && <CommentsModal />}
       {showImageModal && (
         <ImageModal image={imageUrl} onCancel={() => setShowImageModal(!showImageModal)} showArrow={false} />
       )}

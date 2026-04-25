@@ -70,6 +70,9 @@ export class Utils {
   }
 
   static dispatchNotification(message: string, type: NotificationType, dispatch: AppDispatch) {
+    if (type === 'error' && isAuthTransitionInProgress()) {
+      return;
+    }
     dispatch(addNotification({ message, type }));
   }
 

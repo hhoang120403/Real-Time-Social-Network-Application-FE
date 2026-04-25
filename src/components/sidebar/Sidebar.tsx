@@ -91,7 +91,7 @@ const Sidebar = ({ sidebarOpen, toggleSidebar }: SidebarProps) => {
 
         {/* Footer info/copyright */}
         <div className="mt-auto px-6 py-8 border-t border-gray-50">
-          <div className="text-[12px] text-gray-400 font-medium tracking-tight">&copy; 2026 SocialApp Inc.</div>
+          <div className="text-[12px] text-gray-400 font-medium tracking-tight">&copy; 2026 ChattyApp Inc.</div>
           <div className="flex gap-3 mt-3 text-[11px] text-gray-400">
             <span className="hover:text-blue-500 cursor-pointer">Privacy</span>
             <span className="hover:text-blue-500 cursor-pointer">Terms</span>

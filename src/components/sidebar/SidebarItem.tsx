@@ -25,24 +25,25 @@ const SidebarItem = ({
       to={to}
       onClick={onClick}
       className={({ isActive }) =>
-        `flex cursor-pointer items-center gap-5 rounded-xl px-[10px] py-[9.5px] transition-all duration-200 group ${
-          isActive ? "bg-gray-100/80" : "hover:bg-gray-50"
+        `flex cursor-pointer items-center gap-5 rounded-2xl px-4 py-3 transition-all duration-300 group relative ${
+          isActive ? "bg-blue-50/50 text-blue-600" : "hover:bg-gray-50 text-gray-700"
         }`
       }
     >
       {({ isActive }) => (
         <>
-          <div className={`flex h-6 w-6 shrink-0 items-center justify-center transition-colors ${
-            isActive ? "text-black" : "text-gray-700"
-          }`}>
+          {isActive && (
+            <div className="absolute left-0 w-1 h-6 bg-blue-600 rounded-r-full" />
+          )}
+          <div className="flex h-6 w-6 shrink-0 items-center justify-center transition-transform duration-300 group-hover:scale-110">
             {icon}
           </div>
-          <div className={`flex-1 truncate ${fontSize} transition-all ${
-            isActive ? "font-bold text-black" : `${fontWeight} text-gray-800`
+          <div className={`flex-1 truncate ${fontSize} transition-all duration-300 ${
+            isActive ? "font-bold tracking-tight" : `${fontWeight}`
           }`}>
             {label}
           </div>
-          {endIcon && <div className={`transition-colors ${isActive ? "text-black" : "text-gray-400"}`}>{endIcon}</div>}
+          {endIcon && <div className={`transition-colors ${isActive ? "text-blue-600" : "text-gray-400"}`}>{endIcon}</div>}
         </>
       )}
     </NavLink>

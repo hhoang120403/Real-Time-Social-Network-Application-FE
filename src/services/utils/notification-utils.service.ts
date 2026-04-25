@@ -16,7 +16,7 @@ export class NotificationUtils {
   ) {
     const onInsert = (data: NotificationItem[], userToData: { userTo: string }) => {
       if (profile?._id === userToData.userTo) {
-        setNotifications((prev: NotificationItem[]) => {
+        setNotifications((_prev: NotificationItem[]) => {
           const newNotifications = [...data];
           if (type === 'notificationPage') {
             return newNotifications;
@@ -171,19 +171,22 @@ export class NotificationUtils {
     await notificationService.markNotificationAsRead(notificationId);
   }
 
-  static socketIOMessageNotification(profile: any, dispatch: any, location: any, getConversationList: any) {
+  static socketIOMessageNotification(profile: any, dispatch: any, location: any, _getConversationList: any) {
     const onChatList = (data: any) => {
       const isReceiver = data?.receiverUsername?.toLowerCase() === profile?.username?.toLowerCase();
       const isSender = data?.senderUsername?.toLowerCase() === profile?.username?.toLowerCase();
+      const currentChatId = new URLSearchParams(location.search).get('id');
+      const isCurrentOpenChat =
+        Utils.checkUrl(location.pathname, 'chat') && isReceiver && `${currentChatId}` === `${data?.senderId}`;
 
       if (isReceiver || isSender) {
-        dispatch(updateChatList(data));
-        if (
-          isReceiver &&
-          profile?.notifications?.messages &&
-          !data?.isEdited &&
-          !Utils.checkUrl(location.pathname, 'chat')
-        ) {
+        const chatListItem = {
+          ...data,
+          isRead: isReceiver ? isCurrentOpenChat || Boolean(data?.isEdited) : data?.isRead
+        };
+
+        dispatch(updateChatList(chatListItem));
+        if (isReceiver && profile?.notifications?.messages && !data?.isEdited && !isCurrentOpenChat) {
           Utils.dispatchNotification('You have a new message', 'success', dispatch);
         }
       }

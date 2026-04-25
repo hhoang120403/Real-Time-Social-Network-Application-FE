@@ -47,7 +47,9 @@ const Streams = () => {
       }
       setLoading(false);
     } catch (error: any) {
-      Utils.dispatchNotification(error.response?.data?.message || 'Error fetching posts', 'error', dispatch);
+      if (!Utils.shouldSkipErrorNotification(error)) {
+        Utils.dispatchNotification(error.response?.data?.message || 'Error fetching posts', 'error', dispatch);
+      }
       setLoading(false);
     }
   };
@@ -66,7 +68,9 @@ const Streams = () => {
       const response = await postService.getReactionsByUsername(storedUsername);
       dispatch(addReactions(response.data.reactions));
     } catch (error: any) {
-      Utils.dispatchNotification(error.response?.data?.message, 'error', dispatch);
+      if (!Utils.shouldSkipErrorNotification(error)) {
+        Utils.dispatchNotification(error.response?.data?.message, 'error', dispatch);
+      }
     }
   };
 
@@ -75,7 +79,9 @@ const Streams = () => {
       const response = await followerService.getUserFollowing();
       setFollowing(response.data.following);
     } catch (error: any) {
-      Utils.dispatchNotification(error.response?.data?.message, 'error', dispatch);
+      if (!Utils.shouldSkipErrorNotification(error)) {
+        Utils.dispatchNotification(error.response?.data?.message, 'error', dispatch);
+      }
     }
   };
 

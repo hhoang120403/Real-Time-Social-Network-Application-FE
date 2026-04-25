@@ -11,18 +11,15 @@ import { socketService } from '@services/socket/socket.service';
 export class PostUtils {
   static selectBackground(
     bgColor: string,
-    postData: PostData,
     setTextAreaBackground: (value: string) => void,
     setPostData: (value: any) => void
   ) {
-    postData.bgColor = bgColor;
     setTextAreaBackground(bgColor);
-    setPostData(postData);
+    setPostData((prev: any) => ({ ...prev, bgColor }));
   }
 
   static postInputEditable(textContent: string, postData: PostData, setPostData: (value: PostData) => void) {
-    postData.post = textContent;
-    setPostData(postData);
+    setPostData({ ...postData, post: textContent });
   }
 
   static closePostModal(dispatch: Dispatch) {
@@ -37,20 +34,14 @@ export class PostUtils {
     dispatch: Dispatch,
     setSelectedPostImage: (value: File | null) => void,
     setPostImage: (value: string) => void,
-    setPostData: (value: PostData) => void
+    setPostData: (value: any) => void
   ) {
-    postData.gifUrl = '';
-    postData.image = '';
-    postData.video = '';
     setSelectedPostImage(null);
     setPostImage('');
+    setPostData((prev: any) => ({ ...prev, gifUrl: '', image: '', video: '', post: post || prev.post }));
     setTimeout(() => {
       if (inputRef?.current) {
-        inputRef.current.textContent = !post ? postData?.post : post;
-        if (post) {
-          postData.post = post;
-        }
-        setPostData(postData);
+        inputRef.current.textContent = post || postData?.post;
       }
       PostUtils.positionCursor('editable');
     });
@@ -61,15 +52,12 @@ export class PostUtils {
     imageInputRef: React.RefObject<HTMLDivElement | null>,
     postData: PostData,
     post: string,
-    setPostData: (value: PostData) => void
+    setPostData: (value: any) => void
   ) {
     setTimeout(() => {
       if (imageInputRef?.current) {
-        imageInputRef.current.textContent = !post ? postData?.post : post;
-        if (post) {
-          postData.post = post;
-        }
-        setPostData(postData);
+        imageInputRef.current.textContent = post || postData?.post || '';
+        setPostData((prev: any) => ({ ...prev, post: post || prev.post || '' }));
         PostUtils.positionCursor('editable');
       }
     });

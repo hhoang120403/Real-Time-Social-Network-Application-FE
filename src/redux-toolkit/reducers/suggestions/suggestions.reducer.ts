@@ -11,7 +11,7 @@ const suggestionsSlice = createSlice({
   initialState,
   reducers: {
     addToSuggestions: (state, action) => {
-      const { isLoading, users } = action.payload;
+      const { isLoading = false, users = [] } = action.payload || {};
       state.isLoading = isLoading;
       state.users = [...users];
     }
@@ -22,7 +22,7 @@ const suggestionsSlice = createSlice({
     });
     builder.addCase(getUserSuggestions.fulfilled, (state, action) => {
       state.isLoading = false;
-      const { users } = action.payload;
+      const { users = [] } = action.payload || {};
       state.users = [...users];
     });
     builder.addCase(getUserSuggestions.rejected, (state) => {

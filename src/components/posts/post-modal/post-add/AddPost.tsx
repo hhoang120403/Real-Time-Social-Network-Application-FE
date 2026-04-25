@@ -4,7 +4,8 @@ import { useDispatch, useSelector } from 'react-redux';
 import { type AppDispatch, type RootState } from '@redux/store';
 import { useEffect, useRef, useState } from 'react';
 import ModalBoxContent from '@components/posts/post-modal/modal-box-content/ModalBoxContent';
-import { FaArrowLeft, FaTimes } from 'react-icons/fa';
+import { FaArrowLeft, FaTimes, FaSmile } from 'react-icons/fa';
+import EmojiPicker, { Theme } from 'emoji-picker-react';
 import { bgColors, privacyList } from '@services/utils/static.data';
 import ModalBoxSelection from '@components/posts/post-modal/modal-box-content/ModalBoxSelection';
 import Button from '@components/button/Button';
@@ -24,9 +25,10 @@ const AddPost = ({ selectedImage }: { selectedImage: File | null }) => {
   const { gifModalIsOpen, feeling } = useSelector((state: RootState) => state.modal);
   const { gifUrl, image, video, privacy } = useSelector((state: RootState) => state.post);
   const [loading, setLoading] = useState(false);
+  const [aiLoading, setAiLoading] = useState(false);
   const [postImage, setPostImage] = useState<string>('');
   const [postVideo, setPostVideo] = useState<string>('');
-  const [allowedNumberOfCharacters] = useState('255/255');
+  const [allowedNumberOfCharacters] = useState('512/512');
   const [textAreaBackground, setTextAreaBackground] = useState('#ffffff');
   const [postData, setPostData] = useState<PostData>({
     post: '',
@@ -40,6 +42,9 @@ const AddPost = ({ selectedImage }: { selectedImage: File | null }) => {
   const [disable, setDisable] = useState(true);
   const [apiResponse, setApiResponse] = useState('');
   const [selectedPostItem, setSelectedPostItem] = useState<File | null>(null);
+  const [isColorsExpanded, setIsColorsExpanded] = useState(false);
+  const emojiRef = useRef<HTMLDivElement>(null);
+  const [isEmojiPickerOpen, setIsEmojiPickerOpen] = useDetectOutsideClick(emojiRef, false);
   const counterRef = useRef<HTMLSpanElement>(null);
   const inputRef = useRef<HTMLDivElement | null>(null);
   const imageInputRef = useRef<HTMLDivElement | null>(null);
@@ -47,10 +52,10 @@ const AddPost = ({ selectedImage }: { selectedImage: File | null }) => {
   const [togglePrivacy, setTogglePrivacy] = useDetectOutsideClick(privacyRef, false);
   const dispatch = useDispatch<AppDispatch>();
 
-  const maxNumberOfCharacters = 255;
+  const maxNumberOfCharacters = 512;
 
   const selectBackground = (bgColor: string) => {
-    PostUtils.selectBackground(bgColor, postData, setTextAreaBackground, setPostData);
+    PostUtils.selectBackground(bgColor, setTextAreaBackground, setPostData);
   };
 
   const postInputEditable = (event: React.InputEvent<HTMLDivElement>, textContent: string) => {
@@ -59,7 +64,7 @@ const AddPost = ({ selectedImage }: { selectedImage: File | null }) => {
       event.currentTarget.innerHTML = '';
     }
     const counter = maxNumberOfCharacters - currentTextLength;
-    counterRef.current!.textContent = `${counter}/255`;
+    counterRef.current!.textContent = `${counter}/512`;
     setDisable(currentTextLength <= 0 && !postImage && !postVideo);
     PostUtils.postInputEditable(textContent, postData, setPostData);
   };
@@ -78,6 +83,26 @@ const AddPost = ({ selectedImage }: { selectedImage: File | null }) => {
   const clearImage = () => {
     PostUtils.clearImage(postData, '', inputRef, dispatch, setSelectedPostItem, setPostImage, setPostData);
     setPostVideo('');
+  };
+  
+  const onEmojiClick = (emojiData: any) => {
+    const emoji = emojiData.emoji;
+    const text = postData.post + emoji;
+    setPostData({ ...postData, post: text });
+    
+    // Update the editable div content
+    if (textAreaBackground !== '#ffffff') {
+      if (inputRef.current) inputRef.current.textContent = text;
+    } else {
+      if (imageInputRef.current) imageInputRef.current.textContent = text;
+      else if (inputRef.current) inputRef.current.textContent = text;
+    }
+    
+    // Update counter
+    const currentTextLength = text.length;
+    const counter = maxNumberOfCharacters - currentTextLength;
+    if (counterRef.current) counterRef.current.textContent = `${counter}/512`;
+    setDisable(currentTextLength <= 0 && !postImage && !postVideo);
   };
 
   const createPost = async () => {
@@ -159,7 +184,7 @@ const AddPost = ({ selectedImage }: { selectedImage: File | null }) => {
       PostUtils.closePostModal(dispatch);
     }
     setDisable(postData.post.length <= 0 && !postImage && !postVideo);
-  }, [loading, dispatch, apiResponse, postData, postImage, postVideo]);
+  }, [loading, dispatch, apiResponse, postImage, postVideo]);
 
   useEffect(() => {
     if (gifUrl) {
@@ -179,16 +204,18 @@ const AddPost = ({ selectedImage }: { selectedImage: File | null }) => {
       setPostImage('');
       setPostVideo('');
     }
-  }, [gifUrl, image, video, postData]);
+  }, [gifUrl, image, video]);
 
   return (
     <>
-      <PostWrapper>
+      <PostWrapper loading={loading || aiLoading}>
         <div></div>
         {!gifModalIsOpen && (
           <div
-            className="bg-white text-[#050505] rounded-xl shadow-2xl w-full max-w-[600px] flex flex-col relative overflow-hidden animate-in fade-in zoom-in-95 duration-200"
+            className="bg-white text-[#050505] rounded-xl shadow-2xl w-full max-w-[650px] flex flex-col relative overflow-hidden animate-in fade-in zoom-in-95 duration-200"
             style={{
+              minHeight: '500px',
+              minWidth: '500px',
               height:
                 selectedPostItem || gifUrl || image || video || postData?.gifUrl || postData?.image || postData?.video
                   ? 'auto'
@@ -196,9 +223,10 @@ const AddPost = ({ selectedImage }: { selectedImage: File | null }) => {
               maxHeight: '90vh'
             }}
           >
-            {loading && (
-              <div className="absolute inset-0 bg-white/80 z-50 flex flex-col items-center justify-center gap-3">
+            {(loading || aiLoading) && (
+              <div className="absolute inset-0 bg-white/80 z-10000 flex flex-col items-center justify-center gap-3 animate-in fade-in duration-200">
                 <Spinner />
+                {aiLoading && <p className="text-primary font-black uppercase tracking-widest text-[12px] animate-pulse">ChattyAI is crafting magic...</p>}
               </div>
             )}
 
@@ -230,10 +258,10 @@ const AddPost = ({ selectedImage }: { selectedImage: File | null }) => {
                         imageInputRef?.current?.focus();
                       }
                     }}
-                    className={`w-full outline-none wrap-break-word whitespace-pre-wrap ${
+                    className={`w-full outline-none wrap-break-word whitespace-pre-wrap custom-scrollbar overflow-y-auto ${
                       textAreaBackground !== '#ffffff'
                         ? 'text-center font-bold text-[28px] text-white pt-[130px] pb-[130px] min-h-[300px]'
-                        : `text-[#050505] text-[20px] empty:before:content-[attr(data-placeholder)] empty:before:text-[#65676b] w-full ${postImage || postVideo ? 'min-h-[40px] py-1' : 'min-h-[120px] py-2'}`
+                        : `text-[#050505] text-[20px] empty:before:content-[attr(data-placeholder)] empty:before:text-[#65676b] w-full ${postImage || postVideo ? 'min-h-[40px] py-1 max-h-[150px]' : 'min-h-[120px] py-2 max-h-[300px]'}`
                     }`}
                     style={{ background: textAreaBackground !== '#ffffff' ? textAreaBackground : 'transparent' }}
                     contentEditable={true}
@@ -293,27 +321,62 @@ const AddPost = ({ selectedImage }: { selectedImage: File | null }) => {
             )}
 
             <div className="px-4 py-3 shrink-0">
-              {!postImage && !postVideo && (
-                <div className="flex flex-wrap gap-2 mb-3">
-                  {bgColors.map((color, index) => (
+              <div className="flex items-center justify-between gap-2 mb-3 h-10">
+                {!postImage && !postVideo && (
+                  <div className="flex items-center gap-2 overflow-hidden flex-1">
                     <div
-                      key={index}
-                      className={`w-8 h-8 rounded-md cursor-pointer border-2 transition-all hover:scale-110 ${
-                        color === '#ffffff' ? 'border-[#ced0d4]' : 'border-transparent'
-                      } ${textAreaBackground === color ? 'border-primary ring-2 ring-primary ring-offset-1' : ''}`}
-                      style={{ backgroundColor: color }}
-                      onClick={() => {
-                        PostUtils.positionCursor('editable');
-                        selectBackground(color);
-                      }}
-                    ></div>
-                  ))}
+                      className={`w-9 h-9 shrink-0 rounded-lg cursor-pointer flex items-center justify-center bg-linear-to-br from-[#f09433] via-[#e6683c] to-[#bc1888] shadow-md hover:scale-105 transition-all group ${isColorsExpanded ? 'rotate-90 scale-90 opacity-50' : ''}`}
+                      onClick={() => setIsColorsExpanded(!isColorsExpanded)}
+                    >
+                      <span className="text-white font-black text-[15px] group-hover:scale-110 transition-transform">Aa</span>
+                    </div>
+                    
+                    <div className={`flex items-center gap-2 transition-all duration-500 ease-in-out overflow-hidden ${isColorsExpanded ? 'max-w-[450px] opacity-100' : 'max-w-0 opacity-0 pointer-events-none'}`}>
+                      <div className="flex gap-1.5 px-2 py-1 bg-gray-50 rounded-xl border border-gray-100 whitespace-nowrap">
+                        {bgColors.map((color, index) => (
+                          <div
+                            key={index}
+                            className={`w-7 h-7 rounded-md cursor-pointer border transition-all hover:scale-110 active:scale-90 ${
+                              color === '#ffffff' ? 'border-[#ced0d4]' : 'border-transparent'
+                            } ${textAreaBackground === color ? 'border-primary ring-1 ring-primary ring-offset-1' : ''}`}
+                            style={{ backgroundColor: color }}
+                            onClick={() => {
+                              PostUtils.positionCursor('editable');
+                              selectBackground(color);
+                            }}
+                          ></div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                )}
+                
+                {/* Emoji Picker Trigger */}
+                <div className="relative" ref={emojiRef}>
+                   <div 
+                    className="p-2 text-[#65676b] hover:bg-[#f2f3f5] rounded-full transition-colors cursor-pointer"
+                    onClick={() => setIsEmojiPickerOpen(!isEmojiPickerOpen)}
+                   >
+                    <FaSmile size={24} className={isEmojiPickerOpen ? 'text-primary' : ''} />
+                   </div>
+                   
+                   {isEmojiPickerOpen && (
+                     <div className="absolute bottom-full right-0 mb-4 z-10000 shadow-2xl animate-in fade-in slide-in-from-bottom-4 duration-300">
+                        <EmojiPicker 
+                          onEmojiClick={onEmojiClick}
+                          autoFocusSearch={false}
+                          theme={Theme.LIGHT}
+                          width={320}
+                          height={400}
+                        />
+                     </div>
+                   )}
                 </div>
-              )}
+              </div>
 
               <div className="flex items-center justify-between mb-3 px-1">
                 <span className="text-[13px] text-[#65676b] font-medium" ref={counterRef}>
-                  {allowedNumberOfCharacters}/255
+                  {allowedNumberOfCharacters}
                 </span>
               </div>
 
@@ -321,13 +384,18 @@ const AddPost = ({ selectedImage }: { selectedImage: File | null }) => {
                 <ModalBoxSelection
                   setSelectedImage={setSelectedPostItem}
                   isBackgroundSelected={textAreaBackground !== '#ffffff'}
+                  caption={postData.post}
+                  selectedImage={selectedPostItem}
+                  postImage={postImage}
+                  setPostData={setPostData}
+                  setAiLoading={setAiLoading}
                 />
               </div>
 
               <Button
                 className="w-full h-10 bg-primary hover:bg-primary/90 disabled:bg-[#e4e6eb] disabled:text-[#bcc0c4] text-white font-bold rounded-lg transition-all border-none text-[16px]"
                 label="Post"
-                disabled={disable}
+                disabled={disable || aiLoading}
                 handleClick={createPost}
               />
             </div>

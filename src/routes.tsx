@@ -18,6 +18,7 @@ const Notifications = lazy(() => import('@pages/social/notifications/Notificatio
 const Profile = lazy(() => import('@pages/social/profile/Profile'));
 const People = lazy(() => import('@pages/social/people/People'));
 const Streams = lazy(() => import('@pages/social/streams/Streams'));
+const Saved = lazy(() => import('@pages/social/saved/Saved'));
 
 export const AppRouter = () => {
   const element = useRoutes([
@@ -50,6 +51,14 @@ export const AppRouter = () => {
           element: (
             <Suspense fallback={<StreamsSkeleton />}>
               <Streams />
+            </Suspense>
+          )
+        },
+        {
+          path: 'saved',
+          element: (
+            <Suspense fallback={<StreamsSkeleton />}>
+              <Saved />
             </Suspense>
           )
         },
