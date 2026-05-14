@@ -24,7 +24,7 @@
     position: absolute;
     width: calc(100vw - 32px);
     max-width: 600px;
-    overflow: hidden;
+    overflow: visible;
     box-sizing: border-box;
     z-index: 1;
     max-height: 90vh;
@@ -36,7 +36,7 @@
 
     &-body {
       flex: 1;
-      overflow-y: auto;
+      overflow: visible;
       border: 1px solid transparent;
     }
 

@@ -1,5 +1,4 @@
 import { FaTimes, FaRobot, FaExclamationTriangle, FaCheckCircle, FaLightbulb } from 'react-icons/fa';
-import Spinner from '@components/spinner/Spinner';
 import Button from '@components/button/Button';
 
 interface ModerationModalProps {
@@ -14,12 +13,18 @@ const ModerationModal = ({ loading, result, advice, onClose }: ModerationModalPr
     <div className="fixed inset-0 z-10000 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-300">
       <div className="bg-white rounded-3xl shadow-2xl w-full max-w-[500px] overflow-hidden flex flex-col animate-in zoom-in-95 duration-300">
         {/* Header */}
-        <div className={`px-6 py-4 flex items-center justify-between border-b ${result?.is_inappropriate ? 'bg-red-50' : 'bg-green-50'}`}>
+        <div
+          className={`px-6 py-4 flex items-center justify-between border-b ${result?.is_inappropriate ? 'bg-red-50' : 'bg-green-50'}`}
+        >
           <div className="flex items-center gap-2">
-            <div className={`w-8 h-8 rounded-full flex items-center justify-center ${result?.is_inappropriate ? 'bg-red-500 text-white' : 'bg-green-500 text-white'}`}>
+            <div
+              className={`w-8 h-8 rounded-full flex items-center justify-center ${result?.is_inappropriate ? 'bg-red-500 text-white' : 'bg-green-500 text-white'}`}
+            >
               {result?.is_inappropriate ? <FaExclamationTriangle size={16} /> : <FaCheckCircle size={16} />}
             </div>
-            <h3 className={`text-[18px] font-black uppercase tracking-tight ${result?.is_inappropriate ? 'text-red-700' : 'text-green-700'}`}>
+            <h3
+              className={`text-[18px] font-black uppercase tracking-tight ${result?.is_inappropriate ? 'text-red-700' : 'text-green-700'}`}
+            >
               {result?.is_inappropriate ? 'Content Warning' : 'Content Safe'}
             </h3>
           </div>
@@ -34,16 +39,23 @@ const ModerationModal = ({ loading, result, advice, onClose }: ModerationModalPr
             {/* Scores Section */}
             <div className="grid grid-cols-2 gap-3">
               {Object.entries(result.scores).map(([label, score]: [string, any]) => (
-                <div key={label} className="bg-gray-50 p-3 rounded-2xl border border-gray-100 transition-all hover:shadow-md">
+                <div
+                  key={label}
+                  className="bg-gray-50 p-3 rounded-2xl border border-gray-100 transition-all hover:shadow-md"
+                >
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-[12px] font-black uppercase text-gray-400 tracking-wider">{label}</span>
-                    <span className={`text-[14px] font-bold ${score > 0.5 ? 'text-red-500' : 'text-gray-700'}`}>
-                      {(score * 100).toFixed(0)}%
+                    <span
+                      className={`text-[13px] font-bold ${score > 0.4 ? 'text-red-500' : score > 0.1 ? 'text-amber-500' : 'text-green-600'}`}
+                    >
+                      {(score * 100).toFixed(2)}%
                     </span>
                   </div>
                   <div className="h-1.5 w-full bg-gray-200 rounded-full overflow-hidden">
-                    <div 
-                      className={`h-full rounded-full transition-all duration-1000 ${score > 0.5 ? 'bg-red-500' : 'bg-blue-500'}`}
+                    <div
+                      className={`h-full rounded-full transition-all duration-1000 ${
+                        score > 0.4 ? 'bg-red-500' : score > 0.1 ? 'bg-amber-500' : 'bg-green-500'
+                      }`}
                       style={{ width: `${score * 100}%` }}
                     ></div>
                   </div>
@@ -58,7 +70,9 @@ const ModerationModal = ({ loading, result, advice, onClose }: ModerationModalPr
               </div>
               <div className="flex items-center gap-2 mb-3">
                 <FaLightbulb className="text-amber-500 animate-bounce" />
-                <span className="font-black text-[13px] text-blue-900 uppercase tracking-widest">AI Assistant Insight</span>
+                <span className="font-black text-[13px] text-blue-900 uppercase tracking-widest">
+                  AI Assistant Insight
+                </span>
               </div>
               {advice ? (
                 <p className="text-[15px] text-blue-900 leading-relaxed font-medium italic animate-in fade-in slide-in-from-bottom-2 duration-500">
@@ -71,7 +85,9 @@ const ModerationModal = ({ loading, result, advice, onClose }: ModerationModalPr
                     <div className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-bounce [animation-delay:-0.15s]"></div>
                     <div className="w-1.5 h-1.5 bg-blue-600 rounded-full animate-bounce"></div>
                   </div>
-                  <span className="text-[13px] text-blue-400 font-bold italic uppercase tracking-tighter">Gemini is thinking...</span>
+                  <span className="text-[13px] text-blue-400 font-bold italic uppercase tracking-tighter">
+                    Gemini is thinking...
+                  </span>
                 </div>
               )}
             </div>

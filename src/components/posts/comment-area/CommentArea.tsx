@@ -1,4 +1,4 @@
-import { FaRegCommentAlt, FaRegBookmark } from 'react-icons/fa';
+import { FaRegCommentAlt, FaRegBookmark, FaShareSquare } from 'react-icons/fa';
 import './CommentArea.scss';
 import SaveToModal from '../post-modal/save-to-modal/SaveToModal';
 import type { PostItem } from '@app-types/post';
@@ -15,7 +15,7 @@ import type { CreateReactionPayload, IReaction } from '@app-types/reactions';
 import { addReactions } from '@redux/reducers/post/user-post-reaction.reducer';
 import { socketService } from '@services/socket/socket.service';
 import { updatePostItem } from '@redux/reducers/post/post.reducer';
-import { toggleCommentsModal } from '@redux/reducers/modal/modal.reducer';
+import { toggleCommentsModal, openModal } from '@redux/reducers/modal/modal.reducer';
 
 interface ICommentAreaProps {
   post: PostItem;
@@ -30,6 +30,10 @@ const CommentArea = ({ post, setPosts }: ICommentAreaProps) => {
 
   const [showReactions, setShowReactions] = useState<boolean>(false);
   const [showSaveModal, setShowSaveModal] = useState<boolean>(false);
+
+  const handleShareClick = () => {
+    dispatch(openModal({ type: 'share', data: post }));
+  };
 
   const selectedUserReaction = useCallback(
     (postReactions: any[]) => {
@@ -233,8 +237,16 @@ const CommentArea = ({ post, setPosts }: ICommentAreaProps) => {
         <span className="text-[15px]">Save</span>
       </div>
 
-      {showSaveModal && (
-        <SaveToModal postId={post._id!} onClose={() => setShowSaveModal(false)} />
+      {showSaveModal && <SaveToModal postId={post._id!} onClose={() => setShowSaveModal(false)} />}
+
+      {post.userId !== profile?._id && (
+        <div
+          className="flex-1 flex items-center justify-center py-[10px] rounded-lg cursor-pointer transition-all duration-200 hover:bg-[#f2f3f5] text-[#65676b] font-semibold gap-[10px]"
+          onClick={handleShareClick}
+        >
+          <FaShareSquare className="text-[16px]" />
+          <span className="text-[15px]">Share</span>
+        </div>
       )}
     </div>
   );

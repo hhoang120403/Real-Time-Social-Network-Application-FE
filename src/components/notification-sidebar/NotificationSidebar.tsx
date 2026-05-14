@@ -21,6 +21,7 @@ interface NotificationSidebarProps {
   onMarkAsRead: (item: any) => void;
   onDeleteNotification: (id: string) => void;
   onMarkAllAsRead: () => void;
+  onClose?: () => void;
 }
 
 const NotificationSidebar = ({
@@ -28,7 +29,8 @@ const NotificationSidebar = ({
   profile,
   onMarkAsRead,
   onDeleteNotification,
-  onMarkAllAsRead
+  onMarkAllAsRead,
+  onClose
 }: NotificationSidebarProps) => {
   const [activeTab, setActiveTab] = useState<'all' | 'unread'>('all');
   const [isExpanded, setIsExpanded] = useState(false);
@@ -83,6 +85,7 @@ const NotificationSidebar = ({
 
   const navigateToSettings = () => {
     setShowMenu(false);
+    if (onClose) onClose();
     const params = {
       id: profile?._id,
       uId: profile?.uId,
@@ -96,6 +99,7 @@ const NotificationSidebar = ({
 
   const navigateToNotificationsPage = () => {
     setShowMenu(false);
+    if (onClose) onClose();
     navigate('/app/social/notifications');
   };
 

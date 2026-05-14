@@ -216,7 +216,7 @@ export class PostUtils {
     element?.focus();
   }
 
-  static socketIOPost(setPosts: React.Dispatch<React.SetStateAction<PostItem[]>>) {
+  static socketIOPost(setPosts: React.Dispatch<React.SetStateAction<PostItem[]>>, dispatch?: any) {
     socketService?.socket?.off('add post');
     socketService?.socket?.on('add post', (post: PostItem) => {
       setPosts((prevPosts) => [post, ...prevPosts]);
@@ -232,16 +232,17 @@ export class PostUtils {
         }
         return posts;
       });
+      if (dispatch) {
+        dispatch({ type: 'allPosts/updatePost', payload: post });
+      }
     });
 
     socketService?.socket?.off('delete post');
-    socketService?.socket?.on('delete post', (postId: string) => {
+    socketService?.socket?.on('delete post', (postId: string | string[]) => {
       setPosts((prevPosts) => {
         const posts = cloneDeep(prevPosts);
-        const index = findIndex(posts, (postData) => String(postData._id) === String(postId));
-        if (index > -1) {
-          remove(posts, (p) => String(p._id) === String(postId));
-        }
+        const deletedPostIds = Array.isArray(postId) ? postId : [postId];
+        remove(posts, (postData) => deletedPostIds.includes(String(postData._id)));
         return posts;
       });
     });

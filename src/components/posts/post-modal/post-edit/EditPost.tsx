@@ -245,7 +245,7 @@ const EditPost = () => {
         <div></div>
         {!gifModalIsOpen && (
           <div
-            className="bg-white text-[#050505] rounded-xl shadow-2xl w-full max-w-[650px] flex flex-col relative overflow-hidden animate-in fade-in zoom-in-95 duration-200"
+            className="bg-white text-[#050505] rounded-xl shadow-2xl w-full max-w-[650px] flex flex-col relative animate-in fade-in zoom-in-95 duration-200"
             style={{
               minHeight: '500px',
               minWidth: '500px',
@@ -365,7 +365,7 @@ const EditPost = () => {
                 )}
                 
                 {/* Emoji Picker Trigger */}
-                <div className="relative" ref={emojiRef}>
+                <div className="relative ml-auto" ref={emojiRef}>
                    <div 
                     className="p-2 text-[#65676b] hover:bg-[#f2f3f5] rounded-full transition-colors cursor-pointer"
                     onClick={() => setIsEmojiPickerOpen(!isEmojiPickerOpen)}

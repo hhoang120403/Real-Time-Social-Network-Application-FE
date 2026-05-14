@@ -11,6 +11,7 @@ import { useRef } from 'react';
 import { ImageUtils } from '@services/utils/image-utils.service';
 import { useState, useEffect } from 'react';
 import EditPost from '../post-modal/post-edit/EditPost';
+import { FaRobot } from 'react-icons/fa';
 
 const PostForm = () => {
   const { profile } = useSelector((state: RootState) => state.user);
@@ -47,6 +48,12 @@ const PostForm = () => {
     dispatch(toggleFeelingModal(!feelingsIsOpen));
   };
 
+  const openAiModal = () => {
+    dispatch(openModal({ type: 'add' }));
+    // We don't have a toggleAiModal in the reducer yet, but opening 'add' is enough
+    // as the AI icon is inside the ModalBoxSelection.
+  };
+
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     ImageUtils.addFileToRedux(event, '', setSelectedImage, dispatch, 'image');
   };
@@ -76,6 +83,15 @@ const PostForm = () => {
         </div>
 
         <div className="flex items-center gap-0.5 sm:gap-2 shrink-0">
+          {/* AI Assistant Icon */}
+          <div 
+            className="w-9 h-9 flex items-center justify-center rounded-full hover:bg-blue-50 transition-colors cursor-pointer group text-blue-600"
+            title="AI Assistant"
+            onClick={openAiModal}
+          >
+            <FaRobot size={22} className="group-hover:scale-110 transition-transform" />
+          </div>
+
           {/* Photo/Video Icon */}
           <div 
             className="w-9 h-9 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors cursor-pointer group relative"
@@ -131,6 +147,7 @@ const PostForm = () => {
       </div>
       {isOpen && type === 'add' && <AddPost selectedImage={selectedImage} />}
       {isOpen && type === 'edit' && <EditPost />}
+      {isOpen && type === 'share' && <AddPost selectedImage={null} />}
     </>
   );
 };

@@ -17,12 +17,15 @@ export interface PostItem {
   privacy: PrivacyType;
   reactions: ReactionsMap;
   commentsCount: number;
+  sharesCount?: number;
+  savesCount?: number;
   imgId?: string;
   imgVersion?: string;
   videoId?: string;
   videoVersion?: string;
   gifUrl?: string;
   createdAt: string; // nếu muốn strict hơn có thể dùng Date
+  sharedPost?: Partial<PostItem>;
 }
 
 export interface PostData {

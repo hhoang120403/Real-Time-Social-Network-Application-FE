@@ -21,6 +21,7 @@ import { useNavigate } from 'react-router-dom';
 import { ProfileUtils } from '@services/utils/profile-utils.service';
 import { postService } from '@services/api/post/post.service';
 import Dialog from '@components/dialog/Dialog';
+import SharedPostDisplay from './SharedPostDisplay';
 
 interface PostProps {
   post: PostItem;
@@ -97,7 +98,7 @@ const Post = ({ post, showIcons, setPosts }: PostProps) => {
   return (
     <>
       {reactionsModalIsOpen && <ReactionsModal />}
-      {commentsModalIsOpen && selectedPost?._id === post?._id && <CommentsModal />}
+      {commentsModalIsOpen && selectedPost?._id === post?._id && <CommentsModal setPosts={setPosts} />}
       {showImageModal && (
         <ImageModal image={imageUrl} onCancel={() => setShowImageModal(!showImageModal)} showArrow={false} />
       )}
@@ -281,6 +282,9 @@ const Post = ({ post, showIcons, setPosts }: PostProps) => {
                 />
               </div>
             )}
+
+            {/* Embedded Shared Post */}
+            {post?.sharedPost && <SharedPostDisplay sharedPost={post.sharedPost} />}
 
             {/* Reactions & Comments Area Overlay Line */}
             {(post?.reactions?.like! > 0 ||

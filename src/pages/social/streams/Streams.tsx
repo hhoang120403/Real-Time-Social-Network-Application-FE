@@ -105,7 +105,7 @@ const Streams = () => {
   }, [allPosts.isLoading]);
 
   useEffect(() => {
-    PostUtils.socketIOPost(setPosts);
+    PostUtils.socketIOPost(setPosts, dispatch);
   }, [setPosts]);
 
   return (

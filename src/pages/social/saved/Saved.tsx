@@ -7,6 +7,9 @@ import PostComponent from '@components/posts/post/Post';
 import { FaBookmark, FaFolder, FaArrowLeft } from 'react-icons/fa';
 import './Saved.scss';
 
+const getPostTimestamp = (post: any) => new Date(post?.createdAt || post?.updatedAt || 0).getTime();
+const sortNewestPosts = (posts: any[] = []) => [...posts].sort((a, b) => getPostTimestamp(b) - getPostTimestamp(a));
+
 const Saved = () => {
   const [collections, setCollections] = useState<any[]>([]);
   const [selectedCollection, setSelectedCollection] = useState<any>(null);
@@ -29,7 +32,7 @@ const Saved = () => {
     try {
       setLoading(true);
       const response = await collectionService.getCollectionPosts(collectionId);
-      setCollectionPosts(response.data.collection.posts);
+      setCollectionPosts(sortNewestPosts(response.data.collection.posts));
       setLoading(false);
     } catch (error: any) {
       Utils.dispatchNotification(error.response?.data?.message || 'Error fetching posts', 'error', dispatch);

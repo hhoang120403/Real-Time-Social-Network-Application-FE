@@ -25,6 +25,7 @@ interface ModalBoxSelectionProps {
   postImage?: string;
   setPostData: React.Dispatch<React.SetStateAction<PostData>>;
   setAiLoading?: (loading: boolean) => void;
+  hideMediaOptions?: boolean;
 }
 
 const ModalBoxSelection = ({
@@ -34,7 +35,8 @@ const ModalBoxSelection = ({
   selectedImage,
   postImage,
   setPostData,
-  setAiLoading
+  setAiLoading,
+  hideMediaOptions
 }: ModalBoxSelectionProps) => {
   const { gifModalIsOpen, feelingsIsOpen } = useSelector((state: RootState) => state.modal);
   const feelingsRef = useRef<HTMLDivElement>(null);
@@ -42,7 +44,8 @@ const ModalBoxSelection = ({
   const { post } = useSelector((state: RootState) => state.post);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const aiRef = useRef<HTMLDivElement>(null);
-  const [isAiOpen, setIsAiOpen] = useDetectOutsideClick(aiRef, false);
+  const [loading, setLoading] = useState(false);
+  const [isAiOpen, setIsAiOpen] = useDetectOutsideClick(aiRef, false, loading);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isContextModalOpen, setIsContextModalOpen] = useState(false);
   const [isModerationOpen, setIsModerationOpen] = useState(false);
@@ -50,7 +53,6 @@ const ModalBoxSelection = ({
   const [moderationAdvice, setModerationAdvice] = useState('');
   const [isBestTimeOpen, setIsBestTimeOpen] = useState(false);
   const [bestTimeResult, setBestTimeResult] = useState<any>(null);
-  const [loading, setLoading] = useState(false);
   const [loadingAdvice, setLoadingAdvice] = useState(false);
   const [aiOptions, setAiOptions] = useState(() => {
     const saved = localStorage.getItem('chatty_ai_settings');
@@ -100,7 +102,7 @@ const ModalBoxSelection = ({
           });
           setModerationAdvice(adviceRes.data.advice);
         } catch (err) {
-          setModerationAdvice('Không thể lấy lời khuyên lúc này, nhưng hãy cẩn thận với nội dung của bạn nhé!');
+          setModerationAdvice("Couldn't get advice right now, but please be careful with your content!");
         } finally {
           setLoadingAdvice(false);
         }
@@ -194,7 +196,7 @@ const ModalBoxSelection = ({
           <span className="font-bold text-[15px] text-[#050505]">Add to your post</span>
           <div className="flex items-center gap-1">
             {/* Photo Item */}
-            {!isBackgroundSelected && (
+            {!isBackgroundSelected && !hideMediaOptions && (
               <div className={`relative group ${loading ? 'pointer-events-none opacity-50' : ''}`}>
                 <div
                   className="p-2 rounded-full hover:bg-[#f2f3f5] transition-colors cursor-pointer"
@@ -223,7 +225,7 @@ const ModalBoxSelection = ({
             )}
 
             {/* GIF Item */}
-            {!isBackgroundSelected && (
+            {!isBackgroundSelected && !hideMediaOptions && (
               <div className={`relative group ${loading ? 'pointer-events-none opacity-50' : ''}`}>
                 <div
                   className="p-2 rounded-full hover:bg-[#f2f3f5] transition-colors cursor-pointer"

@@ -19,10 +19,12 @@ import { ImageUtils } from '@services/utils/image-utils.service';
 import { postService } from '@services/api/post/post.service';
 import type { PostData } from '@app-types/post';
 import Spinner from '@components/spinner/Spinner';
+import SharedPostDisplay from '@components/posts/post/SharedPostDisplay';
+import { aiService } from '@services/api/ai/ai.service';
 
 const AddPost = ({ selectedImage }: { selectedImage: File | null }) => {
   const { profile } = useSelector((state: RootState) => state.user);
-  const { gifModalIsOpen, feeling } = useSelector((state: RootState) => state.modal);
+  const { gifModalIsOpen, feeling, type, data: sharedPost } = useSelector((state: RootState) => state.modal);
   const { gifUrl, image, video, privacy } = useSelector((state: RootState) => state.post);
   const [loading, setLoading] = useState(false);
   const [aiLoading, setAiLoading] = useState(false);
@@ -84,12 +86,12 @@ const AddPost = ({ selectedImage }: { selectedImage: File | null }) => {
     PostUtils.clearImage(postData, '', inputRef, dispatch, setSelectedPostItem, setPostImage, setPostData);
     setPostVideo('');
   };
-  
+
   const onEmojiClick = (emojiData: any) => {
     const emoji = emojiData.emoji;
     const text = postData.post + emoji;
     setPostData({ ...postData, post: text });
-    
+
     // Update the editable div content
     if (textAreaBackground !== '#ffffff') {
       if (inputRef.current) inputRef.current.textContent = text;
@@ -97,7 +99,7 @@ const AddPost = ({ selectedImage }: { selectedImage: File | null }) => {
       if (imageInputRef.current) imageInputRef.current.textContent = text;
       else if (inputRef.current) inputRef.current.textContent = text;
     }
-    
+
     // Update counter
     const currentTextLength = text.length;
     const counter = maxNumberOfCharacters - currentTextLength;
@@ -106,6 +108,27 @@ const AddPost = ({ selectedImage }: { selectedImage: File | null }) => {
   };
 
   const createPost = async () => {
+    // Automatic moderation check
+    if (postData.post.trim()) {
+      setAiLoading(true);
+      try {
+        const moderationRes = await aiService.checkContent({ text: postData.post.trim() });
+        if (moderationRes.data.result.is_inappropriate) {
+          Utils.dispatchNotification(
+            'Post content is inappropriate. Please check it again with AI Assistant.',
+            'error',
+            dispatch
+          );
+          setAiLoading(false);
+          return;
+        }
+      } catch (error) {
+        console.error('Moderation check failed, proceeding...');
+      } finally {
+        setAiLoading(false);
+      }
+    }
+
     setLoading(!loading);
     setDisable(!disable);
     try {
@@ -116,6 +139,28 @@ const AddPost = ({ selectedImage }: { selectedImage: File | null }) => {
       postData.gifUrl = gifUrl;
       // postData.image = image;
       postData.profilePicture = profile?.profilePicture!;
+
+      if (type === 'share' && sharedPost) {
+        const response = await postService.sharePost((sharedPost as any)._id, {
+          post: postData.post,
+          privacy: postData.privacy,
+          feelings: postData.feelings
+        });
+        if (response) {
+          setApiResponse('success');
+          setLoading(false);
+          Utils.dispatchNotification('Post shared successfully! 🎉', 'success', dispatch);
+
+          // Update the original post's data in the list using the data returned from server
+          if (response.data.post) {
+            dispatch({ type: 'allPosts/updatePost', payload: response.data.post });
+          }
+
+          PostUtils.closePostModal(dispatch);
+        }
+        return;
+      }
+
       if (selectedPostItem || selectedImage) {
         let result = '';
         if (selectedPostItem) {
@@ -212,7 +257,7 @@ const AddPost = ({ selectedImage }: { selectedImage: File | null }) => {
         <div></div>
         {!gifModalIsOpen && (
           <div
-            className="bg-white text-[#050505] rounded-xl shadow-2xl w-full max-w-[650px] flex flex-col relative overflow-hidden animate-in fade-in zoom-in-95 duration-200"
+            className="bg-white text-[#050505] rounded-xl shadow-2xl w-full max-w-[650px] flex flex-col relative animate-in fade-in zoom-in-95 duration-200"
             style={{
               minHeight: '500px',
               minWidth: '500px',
@@ -226,7 +271,11 @@ const AddPost = ({ selectedImage }: { selectedImage: File | null }) => {
             {(loading || aiLoading) && (
               <div className="absolute inset-0 bg-white/80 z-10000 flex flex-col items-center justify-center gap-3 animate-in fade-in duration-200">
                 <Spinner />
-                {aiLoading && <p className="text-primary font-black uppercase tracking-widest text-[12px] animate-pulse">ChattyAI is crafting magic...</p>}
+                {aiLoading && (
+                  <p className="text-primary font-black uppercase tracking-widest text-[12px] animate-pulse">
+                    ChattyAI is crafting magic...
+                  </p>
+                )}
               </div>
             )}
 
@@ -261,7 +310,7 @@ const AddPost = ({ selectedImage }: { selectedImage: File | null }) => {
                     className={`w-full outline-none wrap-break-word whitespace-pre-wrap custom-scrollbar overflow-y-auto ${
                       textAreaBackground !== '#ffffff'
                         ? 'text-center font-bold text-[28px] text-white pt-[130px] pb-[130px] min-h-[300px]'
-                        : `text-[#050505] text-[20px] empty:before:content-[attr(data-placeholder)] empty:before:text-[#65676b] w-full ${postImage || postVideo ? 'min-h-[40px] py-1 max-h-[150px]' : 'min-h-[120px] py-2 max-h-[300px]'}`
+                        : `text-[#050505] text-[20px] empty:before:content-[attr(data-placeholder)] empty:before:text-[#65676b] w-full ${postImage || postVideo || type === 'share' ? 'min-h-[40px] py-1 max-h-[150px]' : 'min-h-[120px] py-2 max-h-[300px]'}`
                     }`}
                     style={{ background: textAreaBackground !== '#ffffff' ? textAreaBackground : 'transparent' }}
                     contentEditable={true}
@@ -278,6 +327,12 @@ const AddPost = ({ selectedImage }: { selectedImage: File | null }) => {
                     </div>
                   )}
                 </div>
+
+                {type === 'share' && sharedPost && (
+                  <div className="mt-1">
+                    <SharedPostDisplay sharedPost={sharedPost} />
+                  </div>
+                )}
 
                 {postImage && (
                   <div className="relative group rounded-lg overflow-hidden border-none p-0 bg-transparent">
@@ -322,16 +377,20 @@ const AddPost = ({ selectedImage }: { selectedImage: File | null }) => {
 
             <div className="px-4 py-3 shrink-0">
               <div className="flex items-center justify-between gap-2 mb-3 h-10">
-                {!postImage && !postVideo && (
+                {!postImage && !postVideo && type !== 'share' && (
                   <div className="flex items-center gap-2 overflow-hidden flex-1">
                     <div
                       className={`w-9 h-9 shrink-0 rounded-lg cursor-pointer flex items-center justify-center bg-linear-to-br from-[#f09433] via-[#e6683c] to-[#bc1888] shadow-md hover:scale-105 transition-all group ${isColorsExpanded ? 'rotate-90 scale-90 opacity-50' : ''}`}
                       onClick={() => setIsColorsExpanded(!isColorsExpanded)}
                     >
-                      <span className="text-white font-black text-[15px] group-hover:scale-110 transition-transform">Aa</span>
+                      <span className="text-white font-black text-[15px] group-hover:scale-110 transition-transform">
+                        Aa
+                      </span>
                     </div>
-                    
-                    <div className={`flex items-center gap-2 transition-all duration-500 ease-in-out overflow-hidden ${isColorsExpanded ? 'max-w-[450px] opacity-100' : 'max-w-0 opacity-0 pointer-events-none'}`}>
+
+                    <div
+                      className={`flex items-center gap-2 transition-all duration-500 ease-in-out overflow-hidden ${isColorsExpanded ? 'max-w-[450px] opacity-100' : 'max-w-0 opacity-0 pointer-events-none'}`}
+                    >
                       <div className="flex gap-1.5 px-2 py-1 bg-gray-50 rounded-xl border border-gray-100 whitespace-nowrap">
                         {bgColors.map((color, index) => (
                           <div
@@ -350,27 +409,27 @@ const AddPost = ({ selectedImage }: { selectedImage: File | null }) => {
                     </div>
                   </div>
                 )}
-                
+
                 {/* Emoji Picker Trigger */}
-                <div className="relative" ref={emojiRef}>
-                   <div 
+                <div className="relative ml-auto" ref={emojiRef}>
+                  <div
                     className="p-2 text-[#65676b] hover:bg-[#f2f3f5] rounded-full transition-colors cursor-pointer"
                     onClick={() => setIsEmojiPickerOpen(!isEmojiPickerOpen)}
-                   >
+                  >
                     <FaSmile size={24} className={isEmojiPickerOpen ? 'text-primary' : ''} />
-                   </div>
-                   
-                   {isEmojiPickerOpen && (
-                     <div className="absolute bottom-full right-0 mb-4 z-10000 shadow-2xl animate-in fade-in slide-in-from-bottom-4 duration-300">
-                        <EmojiPicker 
-                          onEmojiClick={onEmojiClick}
-                          autoFocusSearch={false}
-                          theme={Theme.LIGHT}
-                          width={320}
-                          height={400}
-                        />
-                     </div>
-                   )}
+                  </div>
+
+                  {isEmojiPickerOpen && (
+                    <div className="absolute bottom-full right-0 mb-4 z-10000 shadow-2xl animate-in fade-in slide-in-from-bottom-4 duration-300">
+                      <EmojiPicker
+                        onEmojiClick={onEmojiClick}
+                        autoFocusSearch={false}
+                        theme={Theme.LIGHT}
+                        width={320}
+                        height={400}
+                      />
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -389,6 +448,7 @@ const AddPost = ({ selectedImage }: { selectedImage: File | null }) => {
                   postImage={postImage}
                   setPostData={setPostData}
                   setAiLoading={setAiLoading}
+                  hideMediaOptions={type === 'share'}
                 />
               </div>
 

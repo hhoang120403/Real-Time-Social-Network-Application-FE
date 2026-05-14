@@ -9,6 +9,7 @@ import { postService } from '@services/api/post/post.service';
 import { reactionsMap } from '@services/utils/static.data';
 import { updatePostItem } from '@redux/reducers/post/post.reducer';
 import { toggleCommentsModal, toggleReactionsModal } from '@redux/reducers/modal/modal.reducer';
+import UsersModal from '@components/posts/post-modal/users-modal/UsersModal';
 
 interface IReactionsAndCommentsDisplayProps {
   post: any;
@@ -16,9 +17,16 @@ interface IReactionsAndCommentsDisplayProps {
 
 const ReactionsAndCommentsDisplay = ({ post }: IReactionsAndCommentsDisplayProps) => {
   const { reactionsModalIsOpen, commentsModalIsOpen } = useSelector((state: RootState) => state.modal);
+  const selectedPost = useSelector((state: RootState) => state.post);
   const [postReactions, setPostReactions] = useState<any[]>([]);
   const [postCommentsNames, setPostCommentsNames] = useState<any[]>([]);
+  const [showUsersModal, setShowUsersModal] = useState(false);
+  const [usersModalType, setUsersModalType] = useState<'share' | 'save'>('share');
   const dispatch = useDispatch<AppDispatch>();
+  const displayPost =
+    String(selectedPost?._id || '') === String(post?._id || '')
+      ? { ...post, commentsCount: selectedPost.commentsCount }
+      : post;
 
   const getPostReactions = async () => {
     try {
@@ -47,20 +55,38 @@ const ReactionsAndCommentsDisplay = ({ post }: IReactionsAndCommentsDisplayProps
   };
 
   const openReactionsComponent = () => {
-    dispatch(updatePostItem(post));
+    dispatch(updatePostItem(displayPost));
     dispatch(toggleReactionsModal(!reactionsModalIsOpen));
   };
 
   const openCommentsComponent = () => {
-    dispatch(updatePostItem(post));
+    dispatch(updatePostItem(displayPost));
     dispatch(toggleCommentsModal(!commentsModalIsOpen));
   };
 
-  const reactions = Utils.formattedReactions(post?.reactions);
+  const openUsersModal = (type: 'share' | 'save') => {
+    setUsersModalType(type);
+    setShowUsersModal(true);
+  };
+
+  const reactions = Utils.formattedReactions(displayPost?.reactions);
   const reactionCount = sumAllReactions(reactions);
+  const commentsCount = Number(displayPost.commentsCount || 0);
+
+  if (
+    !reactionCount &&
+    commentsCount === 0 &&
+    (displayPost.sharesCount || 0) === 0 &&
+    (displayPost.savesCount || 0) === 0
+  ) {
+    return null;
+  }
 
   return (
     <div className="reactions-display">
+      {showUsersModal && (
+        <UsersModal postId={post._id} type={usersModalType} onClose={() => setShowUsersModal(false)} />
+      )}
       <div className="reaction">
         <div className="likes-block" onClick={() => openReactionsComponent()}>
           <div className="likes-block-icons reactions-icon-display">
@@ -122,25 +148,42 @@ const ReactionsAndCommentsDisplay = ({ post }: IReactionsAndCommentsDisplayProps
           )}
         </div>
       </div>
-      <div className="comment tooltip-container" data-testid="comment-container" onClick={openCommentsComponent}>
-        {post.commentsCount > 0 && (
-          <span data-testid="comment-count" onMouseEnter={getPostCommentsNames}>
-            {Utils.shortenLargeNumber(post.commentsCount)} {`${post.commentsCount === 1 ? 'Comment' : 'Comments'}`}
-          </span>
-        )}
-        <div className="tooltip-container-text tooltip-container-comments-bottom" data-testid="comment-tooltip">
-          <div className="likes-block-icons-list">
-            {postCommentsNames.length === 0 && <FaSpinner className="circle-notch" />}
-            {postCommentsNames.length > 0 && (
-              <>
-                {postCommentsNames.slice(0, 19).map((names) => (
-                  <span key={Utils.generateString(10)}>{names}</span>
-                ))}
-                {postCommentsNames.length > 20 && <span>and {postCommentsNames.length - 20} others...</span>}
-              </>
-            )}
+      <div className="flex items-center gap-3 ml-auto text-[#65676b] text-[15px]">
+        <div className="comment tooltip-container" data-testid="comment-container" onClick={openCommentsComponent}>
+          {commentsCount > 0 && (
+            <span data-testid="comment-count" onMouseEnter={getPostCommentsNames}>
+              {Utils.shortenLargeNumber(commentsCount)} {`${commentsCount === 1 ? 'Comment' : 'Comments'}`}
+            </span>
+          )}
+          <div className="tooltip-container-text tooltip-container-comments-bottom" data-testid="comment-tooltip">
+            <div className="likes-block-icons-list">
+              {postCommentsNames.length === 0 && <FaSpinner className="circle-notch" />}
+              {postCommentsNames.length > 0 && (
+                <>
+                  {postCommentsNames.slice(0, 19).map((names) => (
+                    <span key={Utils.generateString(10)}>{names}</span>
+                  ))}
+                  {postCommentsNames.length > 20 && <span>and {postCommentsNames.length - 20} others...</span>}
+                </>
+              )}
+            </div>
           </div>
         </div>
+        {Number(displayPost.sharesCount) > 0 && (
+          <div className="comment cursor-pointer hover:underline" onClick={() => openUsersModal('share')}>
+            <span>
+              {Utils.shortenLargeNumber(displayPost.sharesCount)}{' '}
+              {`${displayPost.sharesCount === 1 ? 'Share' : 'Shares'}`}
+            </span>
+          </div>
+        )}
+        {Number(displayPost.savesCount) > 0 && (
+          <div className="comment cursor-pointer hover:underline" onClick={() => openUsersModal('save')}>
+            <span>
+              {Utils.shortenLargeNumber(displayPost.savesCount)} {`${displayPost.savesCount === 1 ? 'Save' : 'Saves'}`}
+            </span>
+          </div>
+        )}
       </div>
     </div>
   );

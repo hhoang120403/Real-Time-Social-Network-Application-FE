@@ -1,4 +1,11 @@
-import type { CreateCommentPayload } from '@app-types/comments';
+import type {
+  CreateCommentPayload,
+  CreateCommentReactionPayload,
+  CreateCommentReplyPayload,
+  CreateCommentReplyReactionPayload,
+  EditCommentPayload,
+  EditCommentReplyPayload
+} from '@app-types/comments';
 import type { PostData } from '@app-types/post';
 import type { Reaction, ReactionType } from '@app-types/reaction';
 import type { CreateReactionPayload } from '@app-types/reactions';
@@ -92,8 +99,63 @@ class PostService {
     return response;
   }
 
+  async addCommentReaction(body: CreateCommentReactionPayload) {
+    const response = await axiosInstance.put('/post/comment/reaction', body);
+    return response;
+  }
+
+  async addCommentReply(body: CreateCommentReplyPayload) {
+    const response = await axiosInstance.post('/post/comment/reply', body);
+    return response;
+  }
+
+  async addCommentReplyReaction(body: CreateCommentReplyReactionPayload) {
+    const response = await axiosInstance.put('/post/comment/reply/reaction', body);
+    return response;
+  }
+
+  async editComment(postId: string, commentId: string, body: EditCommentPayload) {
+    const response = await axiosInstance.put(`/post/comment/${postId}/${commentId}`, body);
+    return response;
+  }
+
+  async deleteComment(postId: string, commentId: string) {
+    const response = await axiosInstance.delete(`/post/comment/${postId}/${commentId}`);
+    return response;
+  }
+
+  async editCommentReply(postId: string, commentId: string, replyId: string, body: EditCommentReplyPayload) {
+    const response = await axiosInstance.put('/post/comment/reply', {
+      ...body,
+      postId,
+      commentId,
+      replyId
+    });
+    return response;
+  }
+
+  async deleteCommentReply(postId: string, commentId: string, replyId: string) {
+    const response = await axiosInstance.delete(`/post/comment/${postId}/${commentId}/reply/${replyId}`);
+    return response;
+  }
+
   async deletePost(postId: string) {
     const response = await axiosInstance.delete(`/post/${postId}`);
+    return response;
+  }
+
+  async sharePost(postId: string, body: { post: string; privacy?: string; feelings?: string }) {
+    const response = await axiosInstance.post(`/post/share/${postId}`, body);
+    return response;
+  }
+
+  async getPostShares(postId: string) {
+    const response = await axiosInstance.get(`/post/shares/${postId}`);
+    return response;
+  }
+
+  async getPostSaves(postId: string) {
+    const response = await axiosInstance.get(`/post/saves/${postId}`);
     return response;
   }
 }

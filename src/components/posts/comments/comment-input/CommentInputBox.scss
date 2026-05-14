@@ -1,38 +1,101 @@
 .comment-container {
   display: flex;
   width: 100%;
+  overflow: visible;
 
   .comment-form {
     display: flex;
-    padding: 10px 0;
+    padding: 10px 15px;
     background: var(--white-1);
-    bottom: 0;
-    left: 0;
-    right: 0;
     width: 100%;
+    overflow: visible;
 
-    .form-row {
-      display: contents;
-      margin-bottom: 0;
+    .comment-input-wrapper {
+      position: relative;
+      display: flex;
+      align-items: center;
+      width: 100%;
+      background: var(--white-10);
+      border-radius: 25px;
+      padding: 4px 12px;
+      transition: all 0.2s ease;
+      border: 1px solid transparent;
+      overflow: visible;
+      z-index: 1;
+
+      &:focus-within {
+        background: var(--white-1);
+        border-color: var(--blue-1);
+        box-shadow: 0 0 0 2px rgba(27, 116, 228, 0.1);
+      }
+
+      .comment-actions-left, .comment-actions-right {
+        display: flex;
+        align-items: center;
+        flex-shrink: 0;
+
+        .comment-icon {
+          font-size: 20px;
+          color: #65676b;
+          cursor: pointer;
+          padding: 6px;
+          border-radius: 50%;
+          transition: background-color 0.2s;
+
+          &:hover {
+            background-color: rgba(0, 0, 0, 0.05);
+          }
+
+          &.smile {
+            &.active, &:hover {
+              color: var(--orange-1);
+            }
+          }
+
+          &.send {
+            &.active {
+              color: var(--blue-1);
+            }
+          }
+        }
+
+        .comment-submit-btn {
+          background: none;
+          border: none;
+          padding: 0;
+          display: flex;
+          align-items: center;
+          cursor: pointer;
+
+          &:disabled {
+            cursor: default;
+            opacity: 0.5;
+          }
+        }
+      }
 
       .comment-input {
         flex: 1;
-        background: var(--white-10);
-        cursor: pointer;
+        background: transparent;
+        border: none;
+        padding: 8px 10px;
+        font-size: 15px;
+        color: var(--black-3);
+        outline: none;
+        width: 100%;
 
-        &:focus::placeholder {
-          color: var(--gray-10);
+        &::placeholder {
+          color: #65676b;
         }
       }
     }
   }
+}
 
-  .comment-form * {
-    padding: 0 15px;
-    border: none;
-    border-radius: 20px;
-    height: 36px;
-    font-size: 15px;
-    color: var(--black-3);
-  }
+.comment-emoji-picker {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 0;
+  z-index: 1000;
+  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.16);
 }

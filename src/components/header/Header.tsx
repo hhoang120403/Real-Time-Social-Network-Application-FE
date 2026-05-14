@@ -465,6 +465,7 @@ const Header = ({ toggleSidebar }: IHeaderProps) => {
                       onMarkAsRead={onMarkAsRead}
                       onDeleteNotification={onDeleteNotification}
                       onMarkAllAsRead={() => setNotificationCount(0)}
+                      onClose={() => setIsNotificationActive(false)}
                     />
                   )}
                 </div>
