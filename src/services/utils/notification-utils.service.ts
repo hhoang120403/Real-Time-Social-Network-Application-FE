@@ -121,6 +121,8 @@ export class NotificationUtils {
             ? notification?.gifUrl
             : notification?.imgUrl,
         comment: notification?.comment,
+        commentImage: notification?.commentImage,
+        commentGif: notification?.commentGif,
         reaction: notification?.reaction,
         senderName: notification?.userFrom ? notification?.userFrom.username : notification?.username,
         notificationType: notification?.notificationType
@@ -151,6 +153,8 @@ export class NotificationUtils {
             ? notification?.gifUrl
             : notification?.imgUrl,
         comment: notification?.comment,
+        commentImage: notification?.commentImage,
+        commentGif: notification?.commentGif,
         reaction: notification?.reaction,
         senderName: notification?.userFrom ? notification?.userFrom.username : notification?.username
       };

@@ -74,6 +74,10 @@ const FollowerCard = ({ userData }: FollowerCardProps) => {
 
   useEffect(() => {
     FollowersUtilsService.socketIOBlockAndUnblockCard(user, setUser);
+    return () => {
+      socketService?.socket?.off('blocked user id');
+      socketService?.socket?.off('unblocked user id');
+    };
   }, [user]);
 
   return (

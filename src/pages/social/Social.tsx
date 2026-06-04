@@ -11,6 +11,7 @@ import { ChatUtils } from '@services/utils/chat-utils.service';
 import { socketService } from '@services/socket/socket.service';
 
 import { StreamVideoProvider } from '@components/video-call/StreamVideoProvider';
+import SharePostModal from '@components/posts/post-modal/share-post-modal/SharePostModal';
 
 const Social = () => {
   const [sidebarOpen, setSidebarOpen] = useState(window.innerWidth >= 1024);
@@ -107,6 +108,7 @@ const Social = () => {
             </div>
           </main>
         </div>
+        <SharePostModal />
       </div>
     </StreamVideoProvider>
   );

@@ -61,7 +61,7 @@ const Post = ({ post, showIcons, setPosts }: PostProps) => {
         dispatch(toggleDeletePostDialog({ toggle: false, data: null }));
         dispatch(clearPost());
         if (setPosts) {
-          setPosts((prevPosts: any[]) => prevPosts.filter((item) => item._id !== post._id));
+          setPosts((prevPosts: any[]) => prevPosts.filter((item) => String(item?._id) !== String(post._id)));
         }
       }
     } catch (error: any) {

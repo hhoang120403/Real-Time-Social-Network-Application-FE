@@ -58,7 +58,9 @@ const Header = ({ toggleSidebar }: IHeaderProps) => {
     reaction: undefined,
     senderName: '',
     secondButtonText: '',
-    secondBtnHandler: () => {}
+    secondBtnHandler: () => {},
+    commentImage: '',
+    commentGif: ''
   });
   const [searchTerm, setSearchTerm] = useState('');
   const [isSearchMode, setIsSearchMode] = useState(false);
@@ -174,6 +176,18 @@ const Header = ({ toggleSidebar }: IHeaderProps) => {
     }
   };
 
+  const openStreamsPage = () => {
+    const isStreamsPage = location.pathname === '/app/social/streams';
+
+    navigate('/app/social/streams', { state: { refreshToken: Date.now() } });
+    window.requestAnimationFrame(() => {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      if (isStreamsPage) {
+        window.dispatchEvent(new CustomEvent('chatty:streams-refresh'));
+      }
+    });
+  };
+
   const searchUsers = debounce(async (query: string) => {
     if (!query) {
       setUsers([]);
@@ -238,6 +252,8 @@ const Header = ({ toggleSidebar }: IHeaderProps) => {
               comment={notificationDialog?.comment}
               reaction={notificationDialog?.reaction}
               senderName={notificationDialog?.senderName}
+              commentImage={notificationDialog?.commentImage}
+              commentGif={notificationDialog?.commentGif}
               secondButtonText="Close"
               secondBtnHandler={() => {
                 setNotificationDialog({
@@ -245,7 +261,9 @@ const Header = ({ toggleSidebar }: IHeaderProps) => {
                   imgUrl: '',
                   comment: '',
                   reaction: undefined,
-                  senderName: ''
+                  senderName: '',
+                  commentImage: '',
+                  commentGif: ''
                 });
               }}
             />
@@ -260,9 +278,10 @@ const Header = ({ toggleSidebar }: IHeaderProps) => {
             >
               <MenuIcon sx={{ color: '#262626' }} />
             </div>
-            <Link
-              to="/app/social/streams"
-              className="flex cursor-pointer items-center justify-center text-black no-underline select-none transition-all hover:opacity-80"
+            <button
+              type="button"
+              onClick={openStreamsPage}
+              className="flex cursor-pointer items-center justify-center text-black no-underline select-none transition-all hover:opacity-80 border-0 bg-transparent p-0"
             >
               <InstagramIcon sx={{ fontSize: '36px', color: '#E4405F' }} className="drop-shadow-sm shrink-0" />
               <div className="flex flex-col shrink-0 w-full">
@@ -270,7 +289,7 @@ const Header = ({ toggleSidebar }: IHeaderProps) => {
                   Chatty
                 </span>
               </div>
-            </Link>
+            </button>
           </div>
 
           {/* Middle Side (Search Bar) */}

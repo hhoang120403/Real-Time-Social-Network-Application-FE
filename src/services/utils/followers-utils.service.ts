@@ -67,13 +67,13 @@ export class FollowersUtilsService {
   ) {
     socketService?.socket?.on('blocked user id', (data: any) => {
       const user = FollowersUtilsService.addBlockedUser(profile, data);
-      setBlockedUsers(profile?.blocked);
+      setBlockedUsers(user.blocked);
       dispatch(addUser({ token, profile: user }));
     });
 
     socketService?.socket?.on('unblocked user id', (data: any) => {
       const user = FollowersUtilsService.removeBlockedUser(profile, data);
-      setBlockedUsers(profile?.blocked);
+      setBlockedUsers(user.blocked);
       dispatch(addUser({ token, profile: user }));
     });
   }

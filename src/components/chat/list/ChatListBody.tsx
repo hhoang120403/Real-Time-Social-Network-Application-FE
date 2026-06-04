@@ -7,9 +7,15 @@ interface ChatListBodyProps {
 }
 
 const ChatListBody = ({ data, profile }: ChatListBodyProps) => {
+  const isUnread = !data.isRead && data.receiverUsername === profile?.username;
+
   return (
-    <div className="flex items-center gap-1.5 min-w-0">
-      <span className="text-[13px] text-gray-500 truncate flex-1 leading-tight">
+    <div className="flex items-center gap-1.5 min-w-0 w-full">
+      <span
+        className={`text-[13px] truncate flex-1 leading-tight ${
+          isUnread ? 'text-slate-950 font-semibold' : 'text-gray-500'
+        }`}
+      >
         {data.senderUsername === profile?.username && <span className="text-gray-400 mr-0.5">You:</span>}
         {data.body}
       </span>
@@ -17,7 +23,7 @@ const ChatListBody = ({ data, profile }: ChatListBodyProps) => {
         <div className="shrink-0 flex items-center">
           {data.receiverUsername === profile?.username ? (
             <div
-              className="w-2.5 h-2.5 bg-primary rounded-full shadow-[0_0_6px_rgba(var(--primary-rgb),0.3)]"
+              className="w-2.5 h-2.5 bg-blue-500 rounded-full shadow-[0_0_6px_rgba(59,130,246,0.6)]"
               title="Unread"
             />
           ) : (

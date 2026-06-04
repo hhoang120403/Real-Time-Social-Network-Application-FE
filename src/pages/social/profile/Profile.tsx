@@ -9,7 +9,7 @@ import { imageService } from '@services/api/image/image.service';
 import { userService } from '@services/api/user/user.service';
 import { tabItems } from '@services/utils/static.data';
 import { Utils } from '@services/utils/utils.service';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useParams, useSearchParams } from 'react-router-dom';
 import { filter } from 'lodash';
@@ -168,6 +168,13 @@ const Profile = () => {
   }, [searchParams]);
 
   const currentUserData = (username === profile?.username ? profile : user) as any;
+  const timelineUserProfileData = useMemo(() => {
+    if (username !== profile?.username || !userProfileData) {
+      return userProfileData;
+    }
+
+    return { ...userProfileData, user: profile };
+  }, [profile, userProfileData, username]);
 
   return (
     <>
@@ -206,16 +213,7 @@ const Profile = () => {
           </div>
           <div className="w-full px-4 sm:px-0 pb-20 profile-content-container" key={displayContent}>
             {displayContent === 'timeline' && (
-              <Timeline
-                userProfileData={
-                  username === profile?.username
-                    ? userProfileData
-                      ? { ...userProfileData, user: profile }
-                      : userProfileData
-                    : userProfileData
-                }
-                loading={loading}
-              />
+              <Timeline userProfileData={timelineUserProfileData} loading={loading} />
             )}
             {displayContent === 'followers' && <FollowerCard userData={currentUserData} />}
             {displayContent === 'gallery' && (

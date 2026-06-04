@@ -38,60 +38,122 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 16px;
+      gap: 20px;
+      width: 100%;
 
-      &-post {
-        font-size: 16px;
-        color: #374151;
-        line-height: 1.6;
-        font-weight: 500;
-        text-align: center;
-        word-break: break-word;
+      .preview-card {
         width: 100%;
-      }
-
-      &-img {
-        width: 100%;
-        max-height: 240px;
-        border-radius: 16px;
-        object-fit: cover;
-        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-      }
-
-      &-comment {
-        width: 100%;
-        padding: 16px;
-        background: #f9fafb;
-        border-radius: 12px;
-        font-size: 15px;
-        color: #4b5563;
-        font-style: italic;
-        line-height: 1.5;
-        border-left: 4px solid #f43f5e;
-        word-break: break-word;
-      }
-
-      &-reaction {
+        border-radius: 18px;
+        padding: 20px;
         display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 10px;
-        padding: 12px 20px;
-        background: #eff6ff;
-        border-radius: 30px;
-        width: fit-content;
+        flex-direction: column;
+        gap: 14px;
+        align-items: flex-start;
+        text-align: left;
+        position: relative;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+        border: 1px solid #f1f5f9;
+        box-sizing: border-box;
 
-        &-text {
-          font-size: 14px;
-          color: #1e40af;
-          font-weight: 600;
+        .card-label {
+          font-size: 11px;
+          font-weight: 800;
+          text-transform: uppercase;
+          letter-spacing: 0.08em;
+          color: #94a3b8;
+          border-bottom: 2px solid currentColor;
+          padding-bottom: 2px;
+          line-height: 1;
         }
 
-        .reaction-img {
-          width: 24px;
-          height: 24px;
-          object-fit: contain;
-          filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));
+        &.post-card {
+          border-left: 5px solid #3b82f6;
+          background: #f0f7ff;
+          border-color: #e0f2fe #e0f2fe #e0f2fe #3b82f6;
+
+          .card-label {
+            color: #3b82f6;
+          }
+
+          .dialog-body-post {
+            font-size: 15px;
+            color: #1e293b;
+            line-height: 1.6;
+            font-weight: 600;
+            text-align: left;
+            word-break: break-word;
+            width: 100%;
+          }
+
+          .dialog-body-img {
+            width: 100%;
+            max-height: 220px;
+            border-radius: 12px;
+            object-fit: contain;
+            background: #ffffff;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+            border: 1px solid #e2e8f0;
+          }
+        }
+
+        &.comment-card {
+          border-left: 5px solid #f43f5e;
+          background: #fff1f2;
+          border-color: #ffe4e6 #ffe4e6 #ffe4e6 #f43f5e;
+
+          .card-label {
+            color: #f43f5e;
+          }
+
+          .dialog-body-comment {
+            font-size: 15px;
+            color: #4c0519;
+            line-height: 1.6;
+            font-weight: 600;
+            text-align: left;
+            word-break: break-word;
+            width: 100%;
+          }
+
+          .dialog-body-comment-img, .dialog-body-comment-gif {
+            width: 100%;
+            max-height: 220px;
+            border-radius: 12px;
+            object-fit: contain;
+            background: #ffffff;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+            border: 1px solid #fecdd3;
+          }
+        }
+
+        &.reaction-card {
+          background: #f0fdf4;
+          border: 1px solid #dcfce7;
+          border-left: 5px solid #22c55e;
+          align-items: center;
+          justify-content: center;
+          padding: 14px 20px;
+
+          .dialog-body-reaction {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            width: 100%;
+
+            &-text {
+              font-size: 14px;
+              color: #14532d;
+              font-weight: 700;
+            }
+
+            .reaction-img {
+              width: 28px;
+              height: 28px;
+              object-fit: contain;
+              filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));
+            }
+          }
         }
       }
     }

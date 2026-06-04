@@ -28,6 +28,8 @@ export interface NotificationDialogState {
   senderName: string;
   secondButtonText?: string;
   secondBtnHandler?: () => void;
+  commentImage?: string;
+  commentGif?: string;
 }
 
 const Notification = () => {
@@ -46,7 +48,9 @@ const Notification = () => {
     reaction: undefined,
     senderName: '',
     secondButtonText: '',
-    secondBtnHandler: () => {}
+    secondBtnHandler: () => {},
+    commentImage: '',
+    commentGif: ''
   });
   const dispatch = useDispatch<AppDispatch>();
 
@@ -176,6 +180,8 @@ const Notification = () => {
           comment={notificationDialog?.comment}
           reaction={notificationDialog?.reaction}
           senderName={notificationDialog?.senderName}
+          commentImage={notificationDialog?.commentImage}
+          commentGif={notificationDialog?.commentGif}
           secondButtonText="Close"
           secondBtnHandler={() => {
             setNotificationDialog({
@@ -183,7 +189,9 @@ const Notification = () => {
               imgUrl: '',
               comment: '',
               reaction: undefined,
-              senderName: ''
+              senderName: '',
+              commentImage: '',
+              commentGif: ''
             });
           }}
         />

@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Utils } from '@services/utils/utils.service';
 import Avatar from '@components/avatar/Avatar';
-import type { IUser } from '@app-types/user';
 import type { AppDispatch, RootState } from '@redux/store';
 import { useDispatch } from 'react-redux';
 import { ProfileUtils } from '@services/utils/profile-utils.service';
@@ -15,7 +14,7 @@ import { FaUsers } from 'react-icons/fa';
 
 const Followers = () => {
   const { profile, token } = useSelector((state: RootState) => state.user);
-  const [followers, setFollowers] = useState<IUser[]>([]);
+  const [followers, setFollowers] = useState<any[]>([]);
   const [blockedUsers, setBlockedUsers] = useState<any[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const dispatch = useDispatch<AppDispatch>();
@@ -59,6 +58,10 @@ const Followers = () => {
 
   useEffect(() => {
     FollowersUtilsService.socketIOBlockAndUnblock(profile!, token!, setBlockedUsers, dispatch);
+    return () => {
+      socketService?.socket?.off('blocked user id');
+      socketService?.socket?.off('unblocked user id');
+    };
   }, [dispatch, profile, token]);
 
   return (

@@ -4,6 +4,7 @@ import Input from '@components/input/Input';
 import useLocalStorage from '@hooks/useLocalStorage';
 import useSessionStorage from '@hooks/useSessionStorage';
 import type { AppDispatch } from '@redux/store';
+import { startAuthTransition } from '@services/axios';
 import { userService } from '@services/api/user/user.service';
 import { Utils } from '@services/utils/utils.service';
 import { useState } from 'react';
@@ -41,6 +42,7 @@ const ChangePassword = () => {
       setNewPassword('');
       setConfirmPassword('');
       if (response) {
+        startAuthTransition();
         Utils.dispatchNotification(response.data.message, 'success', dispatch);
         setTimeout(async () => {
           Utils.clearStore({
@@ -49,7 +51,9 @@ const ChangePassword = () => {
             deleteSessionPageReload,
             setLoggedIn
           });
-          await userService.logoutUser();
+          try {
+            await userService.logoutUser();
+          } catch (_) {}
           navigate('/');
         }, 3000);
       }

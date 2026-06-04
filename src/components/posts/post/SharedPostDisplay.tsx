@@ -2,27 +2,44 @@ import Avatar from '@components/avatar/Avatar';
 import { timeAgo } from '@services/utils/timeago.utils';
 import { Utils } from '@services/utils/utils.service';
 import type { PostItem } from '@app-types/post';
+import { ProfileUtils } from '@services/utils/profile-utils.service';
+import { useNavigate } from 'react-router-dom';
 
 interface ISharedPostDisplayProps {
   sharedPost: Partial<PostItem>;
 }
 
 const SharedPostDisplay = ({ sharedPost }: ISharedPostDisplayProps) => {
+  const navigate = useNavigate();
+
   if (!sharedPost) return null;
+
+  const navigateToSharedPostOwner = (event: React.MouseEvent) => {
+    event.stopPropagation();
+    ProfileUtils.navigateToProfile(
+      { _id: sharedPost?.userId, uId: (sharedPost as any)?.uId, username: sharedPost?.username } as any,
+      navigate
+    );
+  };
 
   return (
     <div className="border border-[#e4e6eb] rounded-xl overflow-hidden mt-3 mb-3 hover:bg-[#f8f9fa] transition-colors cursor-pointer">
       <div className="p-3 pb-0">
         <div className="flex gap-2 items-center mb-2">
-          <Avatar
-            name={sharedPost?.username!}
-            bgColor={sharedPost?.avatarColor!}
-            textColor="#ffffff"
-            size={36}
-            avatarSrc={sharedPost?.profilePicture!}
-          />
+          <div className="shrink-0 cursor-pointer" onClick={navigateToSharedPostOwner}>
+            <Avatar
+              name={sharedPost?.username!}
+              bgColor={sharedPost?.avatarColor!}
+              textColor="#ffffff"
+              size={36}
+              avatarSrc={sharedPost?.profilePicture!}
+            />
+          </div>
           <div className="flex flex-col">
-            <span className="text-[14px] font-semibold text-[#050505] leading-none hover:underline">
+            <span
+              className="text-[14px] font-semibold text-[#050505] leading-none hover:underline cursor-pointer"
+              onClick={navigateToSharedPostOwner}
+            >
               {sharedPost?.username}
             </span>
             <div className="flex items-center gap-1 text-[12px] text-[#65676b] mt-0.5">

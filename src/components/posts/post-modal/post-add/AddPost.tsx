@@ -107,6 +107,34 @@ const AddPost = ({ selectedImage }: { selectedImage: File | null }) => {
     setDisable(currentTextLength <= 0 && !postImage && !postVideo);
   };
 
+  const createLocalPostFallback = () => ({
+    _id: `local-${Date.now()}`,
+    userId: profile?._id,
+    username: profile?.username,
+    email: profile?.email,
+    avatarColor: profile?.avatarColor,
+    profilePicture: profile?.profilePicture,
+    post: postData.post,
+    bgColor: postData.bgColor || textAreaBackground || '#ffffff',
+    feelings: postData.feelings,
+    privacy: postData.privacy || privacy || 'Public',
+    gifUrl,
+    commentsCount: 0,
+    sharesCount: 0,
+    savesCount: 0,
+    imgVersion: '',
+    imgId: '',
+    videoVersion: '',
+    videoId: '',
+    createdAt: new Date().toISOString(),
+    reactions: { like: 0, love: 0, happy: 0, angry: 0, sad: 0, wow: 0 }
+  });
+
+  const notifyPostCreated = (post: any) => {
+    window.dispatchEvent(new CustomEvent('chatty:post-created', { detail: post?._id ? post : createLocalPostFallback() }));
+    window.dispatchEvent(new CustomEvent('chatty:timeline-refresh'));
+  };
+
   const createPost = async () => {
     // Automatic moderation check
     if (postData.post.trim()) {
@@ -188,7 +216,8 @@ const AddPost = ({ selectedImage }: { selectedImage: File | null }) => {
           );
 
           if (response && response?.data?.message) {
-            Utils.dispatchNotification('Your post has been shared! 🎉', 'success', dispatch);
+            notifyPostCreated(response.data.post);
+            Utils.dispatchNotification('Post created successfully! 🎉', 'success', dispatch);
             PostUtils.closePostModal(dispatch);
           }
         } else {
@@ -202,7 +231,8 @@ const AddPost = ({ selectedImage }: { selectedImage: File | null }) => {
           );
 
           if (response && response?.data?.message) {
-            Utils.dispatchNotification('Your post has been shared! 🎉', 'success', dispatch);
+            notifyPostCreated(response.data.post);
+            Utils.dispatchNotification('Post created successfully! 🎉', 'success', dispatch);
             PostUtils.closePostModal(dispatch);
           }
         }
@@ -211,7 +241,8 @@ const AddPost = ({ selectedImage }: { selectedImage: File | null }) => {
         if (response) {
           setApiResponse('success');
           setLoading(false);
-          Utils.dispatchNotification('Your post has been shared! 🎉', 'success', dispatch);
+          notifyPostCreated(response.data.post);
+          Utils.dispatchNotification('Post created successfully! 🎉', 'success', dispatch);
           PostUtils.closePostModal(dispatch);
         }
       }
@@ -281,7 +312,7 @@ const AddPost = ({ selectedImage }: { selectedImage: File | null }) => {
 
             <div className="flex items-center justify-between px-4 py-4 border-b border-[#e5e5e5] shrink-0">
               <div className="w-9 h-9"></div>
-              <h2 className="text-[20px] font-bold">Create post</h2>
+              <h2 className="text-[20px] font-bold">{type === 'share' ? 'Share' : 'Create post'}</h2>
               <button
                 className="w-9 h-9 flex items-center justify-center rounded-full bg-[#f0f2f5] hover:bg-[#e4e6eb] transition-colors cursor-pointer text-[#050505]"
                 onClick={closePostModal}

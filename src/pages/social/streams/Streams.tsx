@@ -1,5 +1,5 @@
 import '@pages/social/streams/Streams.scss';
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import Suggestions from '@components/suggestions/Suggestions';
 import { useDispatch } from 'react-redux';
 import { getUserSuggestions } from '@redux/api/suggestion';
@@ -18,6 +18,7 @@ import { PostUtils } from '@services/utils/post-utils.service';
 import useLocalStorage from '@hooks/useLocalStorage';
 import { addReactions } from '@redux/reducers/post/user-post-reaction.reducer';
 import { followerService } from '@services/api/followers/follower.service';
+import { useLocation } from 'react-router-dom';
 
 const Streams = () => {
   const { allPosts } = useSelector((state: RootState) => state);
@@ -29,8 +30,13 @@ const Streams = () => {
   const bodyRef = useRef<HTMLDivElement>(null);
   const bottomLineRef = useRef<HTMLDivElement>(null);
   const dispatch = useDispatch<AppDispatch>();
+  const location = useLocation();
+  const streamsRefreshToken = (location.state as { refreshToken?: number } | null)?.refreshToken;
   const storedUsername = useLocalStorage('username', 'get');
   const [deleteSelectedPostId] = useLocalStorage('selectedPostId', 'delete');
+  const clearSelectedPostId = useCallback(() => {
+    window.localStorage.removeItem('selectedPostId');
+  }, []);
 
   const getAllPosts = async (page = currentPage) => {
     setLoading(true);
@@ -63,7 +69,7 @@ const Streams = () => {
 
   useInfiniteScroll(bottomLineRef, fetchPostData);
 
-  const getReactionsByUsername = async () => {
+  const getReactionsByUsername = useCallback(async () => {
     try {
       const response = await postService.getReactionsByUsername(storedUsername);
       dispatch(addReactions(response.data.reactions));
@@ -72,9 +78,9 @@ const Streams = () => {
         Utils.dispatchNotification(error.response?.data?.message, 'error', dispatch);
       }
     }
-  };
+  }, [dispatch, storedUsername]);
 
-  const getUserFollowing = async () => {
+  const getUserFollowing = useCallback(async () => {
     try {
       const response = await followerService.getUserFollowing();
       setFollowing(response.data.following);
@@ -83,7 +89,21 @@ const Streams = () => {
         Utils.dispatchNotification(error.response?.data?.message, 'error', dispatch);
       }
     }
-  };
+  }, [dispatch]);
+
+  const refreshStreams = useCallback(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    bodyRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    setCurrentPage(1);
+    setPosts([]);
+    setTotalPostsCount(0);
+    setLoading(true);
+    clearSelectedPostId();
+    dispatch(getPosts());
+    dispatch(getUserSuggestions());
+    getUserFollowing();
+    getReactionsByUsername();
+  }, [clearSelectedPostId, dispatch, getReactionsByUsername, getUserFollowing]);
 
   useEffectOnce(() => {
     getUserFollowing();
@@ -107,6 +127,19 @@ const Streams = () => {
   useEffect(() => {
     PostUtils.socketIOPost(setPosts, dispatch);
   }, [setPosts]);
+
+  useEffect(() => {
+    const handleStreamsRefresh = () => refreshStreams();
+
+    window.addEventListener('chatty:streams-refresh', handleStreamsRefresh);
+    return () => window.removeEventListener('chatty:streams-refresh', handleStreamsRefresh);
+  }, [refreshStreams]);
+
+  useEffect(() => {
+    if (streamsRefreshToken) {
+      refreshStreams();
+    }
+  }, [streamsRefreshToken, refreshStreams]);
 
   return (
     <div className="w-full max-w-[1280px] mx-auto px-0 sm:px-4">

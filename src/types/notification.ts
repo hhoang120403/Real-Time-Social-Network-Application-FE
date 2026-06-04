@@ -22,5 +22,7 @@ export interface NotificationItem {
   imgId: string;
   imgVersion: string;
   gifUrl: string;
+  commentImage?: string;
+  commentGif?: string;
   createdAt: string;
 }

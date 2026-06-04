@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import '@components/toggle/Toggle.scss';
 
 interface IToggleProps {
@@ -7,15 +6,12 @@ interface IToggleProps {
 }
 
 const Toggle = ({ toggle, onClick }: IToggleProps) => {
-  const [toggleValue, setToggleValue] = useState(toggle);
-
   return (
-    <label className="switch" htmlFor="switch" data-testid="toggle" onClick={onClick}>
+    <label className="switch" data-testid="toggle">
       <input
-        id="switch"
         type="checkbox"
-        checked={toggleValue}
-        onChange={() => setToggleValue((toggleValue) => !toggleValue)}
+        checked={toggle}
+        onChange={onClick}
       />
       <span className="slider round"></span>
     </label>

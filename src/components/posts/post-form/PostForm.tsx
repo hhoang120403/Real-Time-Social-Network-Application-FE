@@ -147,7 +147,6 @@ const PostForm = () => {
       </div>
       {isOpen && type === 'add' && <AddPost selectedImage={selectedImage} />}
       {isOpen && type === 'edit' && <EditPost />}
-      {isOpen && type === 'share' && <AddPost selectedImage={null} />}
     </>
   );
 };

@@ -9,17 +9,22 @@ const Register = () => {
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const dispatch = useDispatch<AppDispatch>();
 
   const registerUser = async (event: React.SubmitEvent<HTMLFormElement>) => {
-    setLoading(true);
     event.preventDefault();
+    if (password !== confirmPassword) {
+      Utils.dispatchNotification('Passwords do not match', 'error', dispatch);
+      return;
+    }
+    setLoading(true);
     try {
       const avatarColor = Utils.avatarColor();
       const avatarImage = Utils.generateAvatarImage(username, avatarColor);
-      const result: any = await authService.signUp({ username, email, password, avatarColor, avatarImage });
+      const result: any = await authService.signUp({ username, email, password, confirmPassword, avatarColor, avatarImage });
 
       setLoading(false);
       Utils.dispatchNotification(result?.data?.message, 'success', dispatch);
@@ -78,10 +83,28 @@ const Register = () => {
           />
         </div>
 
+        <div className="flex flex-col gap-2">
+          <label className="text-[14px] font-semibold text-white/95" htmlFor="confirmPassword">
+            Confirm Password
+          </label>
+          <input
+            id="confirmPassword"
+            name="confirmPassword"
+            type="password"
+            className="w-full rounded-xl border-2 border-white/20 bg-white/15 px-[16px] py-[14px] text-[15px] text-white outline-none transition-all placeholder:text-white/50 hover:border-white/30 focus:border-emerald-400 focus:bg-white/25 focus:shadow-[0_0_0_4px_rgba(110,231,183,0.2)]"
+            placeholder="Confirm your password"
+            value={confirmPassword}
+            onChange={(e) => setConfirmPassword(e.target.value)}
+          />
+          {confirmPassword && password !== confirmPassword && (
+            <span className="text-[12px] font-semibold text-rose-400">Passwords do not match</span>
+          )}
+        </div>
+
         <button
           type="submit"
           className="mt-4 w-full rounded-xl bg-linear-to-br from-[#10b981] to-[#059669] p-[16px] text-[16px] font-bold text-white shadow-[0_8px_20px_rgba(16,185,129,0.3)] transition-all hover:-translate-y-0.5 hover:shadow-[0_10px_25px_rgba(16,185,129,0.4)] hover:from-[#34d399] hover:to-[#10b981] disabled:pointer-events-none disabled:bg-white/20 disabled:bg-none disabled:text-white/50 disabled:shadow-none"
-          disabled={!username || !email || !password || loading}
+          disabled={!username || !email || !password || !confirmPassword || password !== confirmPassword || loading}
         >
           {loading ? 'Creating account...' : 'Register'}
         </button>

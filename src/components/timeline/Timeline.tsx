@@ -7,14 +7,15 @@ import useEffectOnce from '@hooks/useEffectOnce';
 import { followerService } from '@services/api/followers/follower.service';
 import { PostUtils } from '@services/utils/post-utils.service';
 import { Utils } from '@services/utils/utils.service';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { useParams } from 'react-router-dom';
+import { useParams, useSearchParams } from 'react-router-dom';
 import '@components/timeline/Timeline.scss';
 import BasicInfo from '@components/timeline/BasicInfo';
 import SocialLinks from '@components/timeline/SocialLinks';
 import useLocalStorage from '@hooks/useLocalStorage';
 import { postService } from '@services/api/post/post.service';
+import { userService } from '@services/api/user/user.service';
 import { addReactions } from '@redux/reducers/post/user-post-reaction.reducer';
 import type { RootState } from '@redux/store';
 
@@ -41,8 +42,31 @@ const Timeline = ({ userProfileData, loading }: ITimelineProps) => {
     youtube: ''
   });
   const { username } = useParams();
+  const [searchParams] = useSearchParams();
   const dispatch = useDispatch();
   const storedUsername = useLocalStorage('username', 'get');
+  const timelineOwnerId = userProfileData?.user?._id;
+
+  const getTimelineOwnerPosts = useCallback(
+    (nextPosts: any[] = []) => {
+      if (!timelineOwnerId) {
+        return nextPosts;
+      }
+
+      return nextPosts.filter((post) => String(post?.userId) === String(timelineOwnerId));
+    },
+    [timelineOwnerId]
+  );
+
+  const setTimelinePosts: React.Dispatch<React.SetStateAction<any[]>> = useCallback(
+    (value) => {
+      setPosts((prevPosts) => {
+        const nextPosts = typeof value === 'function' ? value(prevPosts) : value;
+        return getTimelineOwnerPosts(nextPosts);
+      });
+    },
+    [getTimelineOwnerPosts]
+  );
 
   const getUserFollowing = async () => {
     try {
@@ -53,11 +77,28 @@ const Timeline = ({ userProfileData, loading }: ITimelineProps) => {
     }
   };
 
+  const refreshTimelinePosts = useCallback(async () => {
+    if (!username || !searchParams.get('id') || !searchParams.get('uId')) return;
+
+    try {
+      const response = await userService.getUserProfileByUsername(
+        username,
+        searchParams.get('id') || '',
+        searchParams.get('uId') || ''
+      );
+      setTimelinePosts(response.data.posts || []);
+    } catch (error: any) {
+      if (!Utils.shouldSkipErrorNotification(error)) {
+        Utils.dispatchNotification(error.response?.data?.message, 'error', dispatch);
+      }
+    }
+  }, [dispatch, searchParams, setTimelinePosts, username]);
+
   useEffect(() => {
     if (userProfileData) {
-      setPosts(userProfileData.posts);
+      setPosts(getTimelineOwnerPosts(userProfileData.posts));
     }
-  }, [userProfileData?.posts]);
+  }, [getTimelineOwnerPosts, userProfileData]);
 
   useEffect(() => {
     if (userProfileData) {
@@ -109,8 +150,47 @@ const Timeline = ({ userProfileData, loading }: ITimelineProps) => {
   }, [profile, username]);
 
   useEffect(() => {
-    PostUtils.socketIOPost(setPosts);
-  }, [setPosts]);
+    PostUtils.socketIOPost(setTimelinePosts);
+  }, [setTimelinePosts]);
+
+  useEffect(() => {
+    const handlePostCreated = (event: Event) => {
+      const post = (event as CustomEvent).detail;
+      if (!post?._id) return;
+
+      setTimelinePosts((prevPosts) => {
+        const alreadyExists = prevPosts.some((prevPost) => String(prevPost?._id) === String(post._id));
+        return alreadyExists ? prevPosts : [post, ...prevPosts];
+      });
+    };
+
+    window.addEventListener('chatty:post-created', handlePostCreated);
+    return () => window.removeEventListener('chatty:post-created', handlePostCreated);
+  }, [setTimelinePosts]);
+
+  useEffect(() => {
+    const handleTimelineRefresh = () => {
+      window.setTimeout(refreshTimelinePosts, 700);
+      window.setTimeout(refreshTimelinePosts, 1800);
+    };
+
+    window.addEventListener('chatty:timeline-refresh', handleTimelineRefresh);
+    return () => window.removeEventListener('chatty:timeline-refresh', handleTimelineRefresh);
+  }, [refreshTimelinePosts]);
+
+  useEffect(() => {
+    const handlePostUpdated = (event: Event) => {
+      const post = (event as CustomEvent).detail;
+      if (!post?._id) return;
+
+      setTimelinePosts((prevPosts) =>
+        prevPosts.map((prevPost) => (String(prevPost?._id) === String(post._id) ? post : prevPost))
+      );
+    };
+
+    window.addEventListener('chatty:post-updated', handlePostUpdated);
+    return () => window.removeEventListener('chatty:post-updated', handlePostUpdated);
+  }, [setTimelinePosts]);
 
   return (
     <div className="timeline-wrapper" data-testid="timeline">
@@ -178,7 +258,7 @@ const Timeline = ({ userProfileData, loading }: ITimelineProps) => {
                                 : post?.avatarColor
                           }}
                           showIcons={username === profile?.username}
-                          setPosts={setPosts}
+                          setPosts={setTimelinePosts}
                         />
                       </>
                     )}

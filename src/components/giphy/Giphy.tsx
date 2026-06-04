@@ -12,14 +12,22 @@ import { type RootState } from '@redux/store';
 import Spinner from '@components/spinner/Spinner';
 import { Utils } from '@services/utils/utils.service';
 
-const Giphy = () => {
+interface GiphyProps {
+  onGifSelect?: (gifUrl: string) => void;
+}
+
+const Giphy = ({ onGifSelect }: GiphyProps) => {
   const { gifModalIsOpen } = useSelector((state: RootState) => state.modal);
   const [gifs, setGifs] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const dispatch = useDispatch<AppDispatch>();
 
   const selectGif = (gif: any) => {
-    dispatch(updatePostItem({ gifUrl: gif, image: '', video: '', videoId: '', videoVersion: '' }));
+    if (onGifSelect) {
+      onGifSelect(gif);
+    } else {
+      dispatch(updatePostItem({ gifUrl: gif, image: '', video: '', videoId: '', videoVersion: '' }));
+    }
     dispatch(toggleGifModal(!gifModalIsOpen));
   };
 

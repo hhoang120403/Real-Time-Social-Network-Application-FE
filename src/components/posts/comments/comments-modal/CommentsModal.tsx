@@ -61,6 +61,7 @@ const CommentsModal = ({ setPosts }: CommentsModalProps) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isEmojiPickerOpen, setIsEmojiPickerOpen] = useState(false);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [selectedGif, setSelectedGif] = useState<string>('');
   const [replyingTo, setReplyingTo] = useState<any | null>(null);
   const [editingComment, setEditingComment] = useState<any | null>(null);
   const [editingReply, setEditingReply] = useState<{ comment: any; reply: any } | null>(null);
@@ -73,7 +74,6 @@ const CommentsModal = ({ setPosts }: CommentsModalProps) => {
   const emojiRef = useRef<HTMLDivElement>(null);
   const dispatch = useDispatch<AppDispatch>();
 
-  const { gifUrl } = useSelector((state: RootState) => state.post);
   const { gifModalIsOpen } = useSelector((state: RootState) => state.modal);
 
   const aiRef = useRef<HTMLDivElement>(null);
@@ -258,7 +258,7 @@ const CommentsModal = ({ setPosts }: CommentsModalProps) => {
 
   const submitReply = async () => {
     if (!replyingTo || !profile || isSubmitting) return;
-    const canSubmit = comment.trim() || selectedImage || gifUrl;
+    const canSubmit = comment.trim() || selectedImage || selectedGif;
     if (!canSubmit) return;
 
     const previousCommentsCount = Number(post.commentsCount || 0);
@@ -273,7 +273,7 @@ const CommentsModal = ({ setPosts }: CommentsModalProps) => {
         profilePicture: profile.profilePicture,
         comment: comment.trim(),
         image: selectedImage,
-        gifUrl,
+        gifUrl: selectedGif,
         userFrom: profile._id,
         reactions: emptyReactions(),
         reactionList: [],
@@ -285,7 +285,7 @@ const CommentsModal = ({ setPosts }: CommentsModalProps) => {
         commentId: replyingTo._id,
         comment: comment.trim(),
         image: selectedImage || '',
-        gifUrl: gifUrl || '',
+        gifUrl: selectedGif || '',
         profilePicture: profile.profilePicture
       });
 
@@ -303,7 +303,7 @@ const CommentsModal = ({ setPosts }: CommentsModalProps) => {
       setComment('');
       setSelectedImage(null);
       setReplyingTo(null);
-      dispatch(updatePostItem({ gifUrl: '' }));
+      setSelectedGif('');
     } catch (error: any) {
       syncPostCommentsCount(previousCommentsCount);
       Utils.dispatchNotification(error.response?.data?.message || 'Failed to post reply', 'error', dispatch);
@@ -446,7 +446,7 @@ const CommentsModal = ({ setPosts }: CommentsModalProps) => {
       return;
     }
 
-    const canSubmit = comment.trim() || selectedImage || gifUrl;
+    const canSubmit = comment.trim() || selectedImage || selectedGif;
     if (!canSubmit || !profile || isSubmitting) return;
 
     try {
@@ -457,7 +457,7 @@ const CommentsModal = ({ setPosts }: CommentsModalProps) => {
         postId: post._id,
         comment: comment.trim(),
         image: selectedImage || '',
-        gifUrl: gifUrl || '',
+        gifUrl: selectedGif || '',
         commentsCount: nextCommentsCount,
         profilePicture: profile.profilePicture
       };
@@ -496,7 +496,7 @@ const CommentsModal = ({ setPosts }: CommentsModalProps) => {
         profilePicture: profile.profilePicture,
         comment: comment.trim(),
         image: selectedImage,
-        gifUrl: gifUrl,
+        gifUrl: selectedGif,
         reactions: emptyReactions(),
         reactionList: [],
         replies: [],
@@ -515,7 +515,7 @@ const CommentsModal = ({ setPosts }: CommentsModalProps) => {
         // Clear input after success
         setComment('');
         setSelectedImage(null);
-        dispatch(updatePostItem({ gifUrl: '' }));
+        setSelectedGif('');
         if (commentInputRef.current) {
           commentInputRef.current.style.height = '48px';
         }
@@ -547,7 +547,7 @@ const CommentsModal = ({ setPosts }: CommentsModalProps) => {
       console.log('Image selected:', file);
       ImageUtils.readAsBase64(file).then((result) => {
         setSelectedImage(result as string);
-        dispatch(updatePostItem({ gifUrl: '' }));
+        setSelectedGif('');
         // Reset the value so the same file can be selected again
         event.target.value = '';
       });
@@ -556,14 +556,14 @@ const CommentsModal = ({ setPosts }: CommentsModalProps) => {
 
   const removeSelectedMedia = () => {
     setSelectedImage(null);
-    dispatch(updatePostItem({ gifUrl: '' }));
+    setSelectedGif('');
   };
 
   const startEditComment = (data: any) => {
     setActiveCommentMenuId(null);
     setReplyingTo(null);
     setSelectedImage(null);
-    dispatch(updatePostItem({ gifUrl: '' }));
+    setSelectedGif('');
     setEditingComment(data);
     setEditingReply(null);
     setComment(data?.comment || '');
@@ -581,7 +581,7 @@ const CommentsModal = ({ setPosts }: CommentsModalProps) => {
     setReplyingTo(null);
     setEditingComment(null);
     setSelectedImage(null);
-    dispatch(updatePostItem({ gifUrl: '' }));
+    setSelectedGif('');
     setEditingReply({ comment: commentData, reply });
     setComment(reply?.comment || '');
     window.setTimeout(() => {
@@ -1127,10 +1127,10 @@ const CommentsModal = ({ setPosts }: CommentsModalProps) => {
               </button>
             </div>
           )}
-          {(selectedImage || gifUrl) && (
+          {(selectedImage || selectedGif) && (
             <div className="mb-4 animate-in slide-in-from-bottom-4 duration-200">
               <div className="relative inline-block overflow-hidden rounded-2xl border-2 border-white bg-slate-50 shadow-xl ring-1 ring-slate-200">
-                <img src={selectedImage || gifUrl} alt="Preview" className="max-h-48 w-auto object-contain" />
+                <img src={selectedImage || selectedGif} alt="Preview" className="max-h-48 w-auto object-contain" />
                 <button
                   type="button"
                   className="absolute right-2 top-2 flex h-8 w-8 items-center justify-center rounded-full bg-black/60 text-white backdrop-blur-sm transition-all hover:bg-black/80 hover:scale-110 active:scale-95 shadow-lg"
@@ -1318,7 +1318,7 @@ const CommentsModal = ({ setPosts }: CommentsModalProps) => {
               </div>
               <button
                 type="submit"
-                disabled={(!comment.trim() && !selectedImage && !gifUrl) || isSubmitting}
+                disabled={(!comment.trim() && !selectedImage && !selectedGif) || isSubmitting}
                 className="group flex h-10 w-10 items-center justify-center rounded-full text-blue-600 transition-all duration-300 hover:bg-blue-600 hover:text-white hover:scale-110 disabled:cursor-not-allowed disabled:bg-transparent disabled:text-slate-300 disabled:hover:scale-100 shadow-sm"
               >
                 {isSubmitting ? (
@@ -1346,7 +1346,7 @@ const CommentsModal = ({ setPosts }: CommentsModalProps) => {
                   </button>
                 </div>
                 <div className="max-h-[65vh] overflow-y-auto p-4 custom-scrollbar">
-                  <Giphy />
+                  <Giphy onGifSelect={(gif) => setSelectedGif(gif)} />
                 </div>
               </div>
             </div>

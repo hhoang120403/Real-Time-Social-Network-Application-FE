@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { FaTimes, FaPlus, FaLock } from 'react-icons/fa';
 import Button from '@components/button/Button';
 import { collectionService } from '@services/api/collections/collections.service';
@@ -89,8 +90,8 @@ const SaveToModal = ({ postId, onClose }: SaveToModalProps) => {
     }
   };
 
-  return (
-    <div className="fixed inset-0 z-100 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
+  const modalContent = (
+    <div className="fixed inset-0 z-10000 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
       <div className="bg-[#1c1e21] w-full max-w-[450px] rounded-xl shadow-[0_20px_60px_rgba(0,0,0,0.5)] overflow-hidden border border-[#303338] animate-in zoom-in-95 duration-200">
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-[#303338]">
@@ -223,6 +224,8 @@ const SaveToModal = ({ postId, onClose }: SaveToModalProps) => {
       </div>
     </div>
   );
+
+  return createPortal(modalContent, document.body);
 };
 
 export default SaveToModal;

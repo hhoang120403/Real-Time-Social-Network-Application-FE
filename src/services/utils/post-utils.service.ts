@@ -9,6 +9,11 @@ import { cloneDeep, find, findIndex, remove } from 'lodash';
 import { socketService } from '@services/socket/socket.service';
 
 export class PostUtils {
+  static notifyPostUpdated(post: PostItem | undefined) {
+    if (!post?._id) return;
+    window.dispatchEvent(new CustomEvent('chatty:post-updated', { detail: post }));
+  }
+
   static selectBackground(
     bgColor: string,
     setTextAreaBackground: (value: string) => void,
@@ -163,6 +168,7 @@ export class PostUtils {
       postData.imgVersion = '';
       const response = await postService.updatePostWithImage(postId, postData);
       if (response) {
+        PostUtils.notifyPostUpdated(response.data.post);
         PostUtils.dispatchNotification(response?.data?.message, 'success', setApiResponse, setLoading, dispatch);
         setTimeout(() => {
           setApiResponse('');
@@ -185,6 +191,7 @@ export class PostUtils {
     try {
       const response = await postService.updatePost(postId, postData);
       if (response) {
+        PostUtils.notifyPostUpdated(response.data.post);
         PostUtils.dispatchNotification(response?.data?.message, 'success', setApiResponse, setLoading, dispatch);
         setTimeout(() => {
           setApiResponse('success');
@@ -219,7 +226,10 @@ export class PostUtils {
   static socketIOPost(setPosts: React.Dispatch<React.SetStateAction<PostItem[]>>, dispatch?: any) {
     socketService?.socket?.off('add post');
     socketService?.socket?.on('add post', (post: PostItem) => {
-      setPosts((prevPosts) => [post, ...prevPosts]);
+      setPosts((prevPosts) => {
+        const alreadyExists = prevPosts.some((prevPost) => String(prevPost?._id) === String(post?._id));
+        return alreadyExists ? prevPosts : [post, ...prevPosts];
+      });
     });
 
     socketService?.socket?.off('update post');
